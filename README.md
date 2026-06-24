@@ -21,6 +21,7 @@ These are assembled into a Markdown document like:
 
 ```markdown
 ## Flag 1
+
 - URL: https://example.com
 - Selector: `header > nav > a.cta`
 - Element: `<a class="cta">Sign up</a>`
@@ -31,12 +32,12 @@ These are assembled into a Markdown document like:
 
 ## Project structure
 
-| File             | Purpose                                                                 |
-| ---------------- | ----------------------------------------------------------------------- |
-| `manifest.json`  | Extension manifest (currently Manifest V2).                             |
-| `background.js`  | Background script; injects `bookmarklet.js` when the toolbar icon is clicked. |
-| `bookmarklet.js` | The full overlay UI and flagging logic (injected into the active tab).  |
-| `icon-*.png`     | Toolbar / store icons (16, 48, 128 px).                                 |
+| File             | Purpose                                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `manifest.json`  | Extension manifest (Manifest V3).                                                              |
+| `background.js`  | Service worker; injects `bookmarklet.js` into the active tab when the toolbar icon is clicked. |
+| `bookmarklet.js` | The full overlay UI and flagging logic (injected into the active tab).                         |
+| `icon-*.png`     | Toolbar / store icons (16, 48, 128 px).                                                        |
 
 ## Installing locally (unpacked)
 
@@ -67,16 +68,16 @@ on it:
 2. Go to `chrome://extensions` and click the **reload** icon on the Flagger card.
 3. Reload the target page and re-test.
 
-### Known limitation: Manifest V2
+### Manifest V3
 
-This extension currently uses **Manifest V2**, which Chrome is phasing out in
-favor of Manifest V3 (`service_worker` background, `action` instead of
-`browser_action`, etc.). A migration to MV3 is the most likely first piece of
-future work if you want it to keep running in current Chrome.
+This extension uses **Manifest V3**. The background runs as a `service_worker`,
+the toolbar entry point is `action`, and the overlay is injected with
+`chrome.scripting.executeScript`. It requests only `activeTab` + `scripting`
+permissions — host access is granted to the current tab at the moment you click
+the icon, so there are no broad "read all your data on all websites" warnings.
 
 ## Roadmap ideas
 
-- Migrate to Manifest V3.
 - Configurable output format / templates.
 - Persist flags across reloads.
 - Export to file (not just clipboard).
