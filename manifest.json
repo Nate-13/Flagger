@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Flagger",
-  "description": "Flag changes to elements on a website and copy instructions to hand to your agent. - Created with http://blog.self.li",
+  "description": "Flag changes to elements on a website and copy instructions to hand to your agent.",
   "version": "0.1",
-  "homepage_url": "http://blog.self.li/post/16366939413/how-to-convert-bookmarklet-to-chrome-extension",
+  "homepage_url": "https://github.com/Nate-13/Flagger",
   "action": {
     "default_icon": {
       "16": "icon-16.png",

@@ -32,12 +32,12 @@ These are assembled into a Markdown document like:
 
 ## Project structure
 
-| File             | Purpose                                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| `manifest.json`  | Extension manifest (Manifest V3).                                                              |
-| `background.js`  | Service worker; injects `bookmarklet.js` into the active tab when the toolbar icon is clicked. |
-| `bookmarklet.js` | The full overlay UI and flagging logic (injected into the active tab).                         |
-| `icon-*.png`     | Toolbar / store icons (16, 48, 128 px).                                                        |
+| File            | Purpose                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `manifest.json` | Extension manifest (Manifest V3).                                                          |
+| `background.js` | Service worker; injects `content.js` into the active tab when the toolbar icon is clicked. |
+| `content.js`    | The full overlay UI and flagging logic (injected into the active tab).                     |
+| `icon-*.png`    | Toolbar / store icons (16, 48, 128 px).                                                    |
 
 ## Installing locally (unpacked)
 
@@ -63,7 +63,7 @@ These are assembled into a Markdown document like:
 There is no build step — the extension runs the source files directly. To work
 on it:
 
-1. Edit `bookmarklet.js` (UI/logic), `background.js` (injection), or
+1. Edit `content.js` (UI/logic), `background.js` (injection), or
    `manifest.json` (metadata/permissions).
 2. Go to `chrome://extensions` and click the **reload** icon on the Flagger card.
 3. Reload the target page and re-test.
