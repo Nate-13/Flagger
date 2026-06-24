@@ -32,18 +32,39 @@ These are assembled into a Markdown document like:
 
 ## Project structure
 
-| File            | Purpose                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------ |
-| `manifest.json` | Extension manifest (Manifest V3).                                                          |
-| `background.js` | Service worker; injects `content.js` into the active tab when the toolbar icon is clicked. |
-| `content.js`    | The full overlay UI and flagging logic (injected into the active tab).                     |
-| `icon-*.png`    | Toolbar / store icons (16, 48, 128 px).                                                    |
+The overlay is written as small ES modules in `src/` and bundled by
+[esbuild](https://esbuild.github.io/) into a single classic script that Chrome
+injects. The build also copies the static files so `dist/` is a complete,
+loadable unpacked extension.
+
+| Path            | Purpose                                                                     |
+| --------------- | --------------------------------------------------------------------------- |
+| `manifest.json` | Extension manifest (Manifest V3).                                           |
+| `background.js` | Service worker; injects `content.js` into the active tab on toolbar click.  |
+| `src/`          | Overlay source modules (see below); `src/index.js` is the entry point.      |
+| `build.js`      | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files. |
+| `dist/`         | Build output and the folder you load into Chrome (generated; git-ignored).  |
+| `test/`         | jsdom integration test for the session/history state machine.               |
+| `icon-*.png`    | Toolbar / store icons (16, 48, 128 px).                                     |
+
+The `src/` modules: `index` (entry/guard) → `overlay` (toolbar, page events,
+copy/exit, teardown) which pulls in `flags` (selection + popup), `panel` (flags
+list), `history` (saved sessions), `sessions` (persistence), `badges`,
+`markdown`, `clipboard`, `styles`, `icons`, `theme`, `utils`, and the shared
+`state` object.
 
 ## Installing locally (unpacked)
 
+```bash
+npm install     # one-time: install esbuild + jsdom
+npm run build   # produces dist/
+```
+
+Then:
+
 1. Open `chrome://extensions` in Chrome (or any Chromium browser).
 2. Toggle **Developer mode** on (top right).
-3. Click **Load unpacked** and select this project folder.
+3. Click **Load unpacked** and select the **`dist/`** folder.
 4. Pin the **Flagger** icon to your toolbar.
 
 ## Using it
@@ -81,13 +102,23 @@ back.
 
 ## Development
 
-There is no build step — the extension runs the source files directly. To work
-on it:
+```bash
+npm run dev    # esbuild watch — rebuilds dist/ on every save
+npm run build  # one-off production build
+npm test       # builds, then runs the jsdom integration test
+npm run format # Prettier
+```
 
-1. Edit `content.js` (UI/logic), `background.js` (injection), or
-   `manifest.json` (metadata/permissions).
-2. Go to `chrome://extensions` and click the **reload** icon on the Flagger card.
-3. Reload the target page and re-test.
+Typical loop:
+
+1. Run `npm run dev` and leave it watching.
+2. Edit modules in `src/` (UI/logic), or `background.js` / `manifest.json`.
+   Changes to `manifest.json`, `background.js`, or the icons need a re-run of
+   `npm run build` (the watcher only rebundles JS).
+3. Go to `chrome://extensions` and click the **reload** icon on the Flagger card.
+4. Reload the target page and re-test.
+
+> Editing `content.js` directly does nothing — it's generated. Edit `src/`.
 
 ### Manifest V3
 
