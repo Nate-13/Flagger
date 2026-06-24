@@ -52,11 +52,32 @@ These are assembled into a Markdown document like:
 2. Click the **Flagger** toolbar icon to activate the overlay.
 3. Hover to highlight elements; click one to flag it and add a note.
 4. Open the **Flags** panel to review, edit, or delete flags.
-5. Click **Copy** — the Markdown brief is copied to your clipboard and the
-   overlay closes.
+5. Click **Copy & Exit** — the Markdown brief is copied to your clipboard, the
+   overlay closes, and the session is filed away in History.
 
 > Run it again on the same page after closing; Flagger guards against being
 > activated twice at once.
+
+## Sessions & history
+
+Flags are no longer lost when you close the overlay. Everything is saved to a
+**session** as you work (via `chrome.storage.local`), so you can leave and come
+back.
+
+- **Auto-save** — every flag you add, edit, or delete is persisted immediately.
+- **One open session at a time** — clicking the icon resumes the session you
+  were building and re-pins this page's flags. A session can span multiple pages
+  and sites; flags from other pages stay in the set (shown with a `↗ host` hint)
+  but are only re-pinned on the page they belong to.
+- **Copy ends a session** — **Copy & Exit** marks the session done and files it
+  in History. The next time you open Flagger you start fresh.
+- **Closing keeps it open** — closing the overlay (the ✕) or navigating away
+  leaves the session open so you can keep going later. Nothing is discarded.
+- **History menu** — the **History** button lists every saved session. Each row
+  has a quick **Copy** (re-copy the brief without opening it) and clicking the
+  row **reopens** the session and re-applies its flags to the current page.
+- **New session** — start a clean slate without copying; the previous open
+  session is kept in History as a draft.
 
 ## Development
 
@@ -72,12 +93,14 @@ on it:
 
 This extension uses **Manifest V3**. The background runs as a `service_worker`,
 the toolbar entry point is `action`, and the overlay is injected with
-`chrome.scripting.executeScript`. It requests only `activeTab` + `scripting`
-permissions — host access is granted to the current tab at the moment you click
-the icon, so there are no broad "read all your data on all websites" warnings.
+`chrome.scripting.executeScript`. It requests `activeTab` + `scripting` (host
+access is granted to the current tab at the moment you click the icon, so there
+are no broad "read all your data on all websites" warnings) plus `storage` for
+saving sessions locally.
 
 ## Roadmap ideas
 
 - Configurable output format / templates.
-- Persist flags across reloads.
+- Rename sessions; group sessions into named cross-page "projects".
+- A full-page history dashboard.
 - Export to file (not just clipboard).
