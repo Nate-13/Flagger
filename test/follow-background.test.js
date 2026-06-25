@@ -87,15 +87,7 @@ C.exec.length = 0;
 await L.onUpdated(7, { status: "complete" });
 assert(C.exec.length === 0, "navigation does not re-inject an unengaged tab");
 
-console.log("[3] requestFollow opens the grant window");
-L.onMessage({ type: "flagger:requestFollow" }, { tab: { id: 7 } }, () => {});
-await tick();
-assert(
-  C.windows.length === 1 && /enable-follow\.html\?tab=7/.test(C.windows[0].url),
-  "opens enable-follow.html for the right tab",
-);
-
-console.log("[4] granting permission engages + notifies the tab");
+console.log("[3] granting permission engages + notifies the tab");
 chrome._setPerm(true);
 L.onMessage({ type: "flagger:followGranted", tabId: 7 }, {}, () => {});
 await tick();
@@ -104,7 +96,7 @@ assert(
   "tab is told it is now following",
 );
 
-console.log("[5] re-inject after navigation when following");
+console.log("[4] re-inject after navigation when following");
 C.exec.length = 0;
 await L.onUpdated(7, { status: "complete" });
 await tick();
@@ -113,23 +105,23 @@ assert(
   "navigation re-injects the overlay while following",
 );
 
-console.log("[6] only on completed navigations");
+console.log("[5] only on completed navigations");
 C.exec.length = 0;
 await L.onUpdated(7, { status: "loading" });
 assert(C.exec.length === 0, "ignores non-complete navigation updates");
 
-console.log("[7] getFollowState reflects engagement");
+console.log("[6] getFollowState reflects engagement + returns the tab id");
 let state;
 L.onMessage({ type: "flagger:getFollowState" }, { tab: { id: 7 } }, (r) => {
   state = r;
 });
 await tick();
 assert(
-  state && state.following === true,
-  "getFollowState true when engaged + permitted",
+  state && state.following === true && state.tabId === 7,
+  "getFollowState true + tabId when engaged + permitted",
 );
 
-console.log("[8] disengage stops following");
+console.log("[7] disengage stops following");
 L.onMessage({ type: "flagger:disengage" }, { tab: { id: 7 } }, () => {});
 await tick();
 C.exec.length = 0;

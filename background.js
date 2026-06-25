@@ -81,39 +81,29 @@ if (chrome.permissions && chrome.permissions.onRemoved) {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || !msg.type) return;
-  const tabId = sender && sender.tab ? sender.tab.id : null;
+  const senderTabId = sender && sender.tab ? sender.tab.id : null;
 
   if (msg.type === "flagger:getFollowState") {
     (async () => {
       const following =
-        tabId != null &&
-        (await isEngaged(tabId)) &&
+        senderTabId != null &&
+        (await isEngaged(senderTabId)) &&
         (await hasFollowPermission());
-      sendResponse({ following });
+      // Return the tab id so the content script can target the enable-follow
+      // iframe at the right tab.
+      sendResponse({ following, tabId: senderTabId });
     })();
     return true; // keep the channel open for the async response
   }
 
-  if (msg.type === "flagger:requestFollow") {
-    // Open a small page where the user can grant the permission with a click
-    // (chrome.permissions.request needs a user gesture in a foreground page).
-    if (tabId != null) {
-      chrome.windows.create({
-        url: chrome.runtime.getURL("enable-follow.html?tab=" + tabId),
-        type: "popup",
-        width: 440,
-        height: 340,
-      });
-    }
-    return;
-  }
-
   if (msg.type === "flagger:followGranted") {
+    // Sent from the enable-follow iframe after the user grants permission.
+    const tabId = msg.tabId != null ? msg.tabId : senderTabId;
     (async () => {
-      if (msg.tabId != null && (await hasFollowPermission())) {
-        await engage(msg.tabId);
+      if (tabId != null && (await hasFollowPermission())) {
+        await engage(tabId);
         try {
-          chrome.tabs.sendMessage(msg.tabId, {
+          chrome.tabs.sendMessage(tabId, {
             type: "flagger:followState",
             following: true,
           });
@@ -124,7 +114,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 
   if (msg.type === "flagger:disengage") {
-    if (tabId != null) disengage(tabId);
+    if (senderTabId != null) disengage(senderTabId);
     return;
   }
 });

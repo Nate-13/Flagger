@@ -1,5 +1,5 @@
-// Content-side test for the Follow toggle + the navigate-and-reopen nudge.
-// Loads the built bundle into jsdom with a stubbed chrome.runtime.
+// Content-side test for the navigate-and-reopen Follow modal (no toolbar
+// button). Loads the built bundle into jsdom with a stubbed chrome.runtime.
 import { readFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 
@@ -8,10 +8,11 @@ const SRC = readFileSync(
   "utf8",
 );
 const KEY = "__flagger_store_v1";
+const EXT_ORIGIN = "chrome-extension://testid";
 const tick = () => new Promise((r) => setTimeout(r, 5));
 
-// A store with an open session whose flag lives on a DIFFERENT page, so the
-// resume looks like a navigate-and-reopen (should trigger the Follow nudge).
+// An open session whose only flag lives on a DIFFERENT page, so the resume
+// looks like a navigate-and-reopen (should offer Follow via the modal).
 function seededDisk() {
   return {
     [KEY]: {
@@ -71,10 +72,11 @@ function inject() {
     runtime: {
       id: "testid",
       lastError: null,
+      getURL: (p) => EXT_ORIGIN + "/" + p,
       sendMessage(msg, cb) {
         sent.push(msg);
         if (msg.type === "flagger:getFollowState")
-          cb && cb({ following: false });
+          cb && cb({ following: false, tabId: 99 });
         else cb && cb({});
       },
       onMessage: {
@@ -102,36 +104,57 @@ function assert(cond, msg) {
   console.log("  ok - " + msg);
 }
 
-const ctx = inject();
-const { doc } = ctx;
-
-console.log("[1] follow button + initial state");
-const btn = doc.getElementById("__cmt_follow");
-assert(!!btn, "Follow button is in the toolbar");
+console.log("[1] no persistent Follow button; modal offered after reopen");
+let ctx = inject();
+assert(
+  !ctx.doc.getElementById("__cmt_follow"),
+  "no Follow button in the toolbar",
+);
 await tick();
 assert(
   ctx.sent.some((m) => m.type === "flagger:getFollowState"),
-  "asks the background for the current follow state on mount",
+  "asks the background for follow state on mount",
 );
-assert(!btn.classList.contains("__cmt_on"), "starts not-following");
-
-console.log("[2] navigate-and-reopen nudge");
-const flash = doc.getElementById("__cmt_flash");
+let modal = ctx.doc.getElementById("__cmt_modal_backdrop");
+assert(!!modal, "follow modal appears after navigate-and-reopen");
+const frame = modal.querySelector("iframe");
 assert(
-  !!flash && /Follow/.test(flash.textContent),
-  "nudge shown (session spans pages + not following)",
+  frame && /enable-follow\.html\?tab=99/.test(frame.getAttribute("src")),
+  "modal hosts the enable-follow iframe targeting this tab",
 );
 
-console.log("[3] clicking Follow asks the background to start it");
-btn.dispatchEvent(new ctx.w.MouseEvent("click", { bubbles: true }));
+console.log("[2] iframe 'done' message closes the modal");
+ctx.w.dispatchEvent(
+  new ctx.w.MessageEvent("message", {
+    data: "flagger:follow-done",
+    origin: EXT_ORIGIN,
+  }),
+);
 assert(
-  ctx.sent.some((m) => m.type === "flagger:requestFollow"),
-  "click sends requestFollow",
+  !ctx.doc.getElementById("__cmt_modal_backdrop"),
+  "modal closes when the iframe signals done",
 );
 
-console.log("[4] background confirms → button lights up");
+console.log("[3] a stray cross-origin message does NOT close the modal");
+ctx = inject();
+await tick();
+assert(!!ctx.doc.getElementById("__cmt_modal_backdrop"), "modal is open");
+ctx.w.dispatchEvent(
+  new ctx.w.MessageEvent("message", {
+    data: "flagger:follow-done",
+    origin: "https://evil.example.com",
+  }),
+);
+assert(
+  !!ctx.doc.getElementById("__cmt_modal_backdrop"),
+  "modal stays open for non-extension origins",
+);
+
+console.log("[4] background confirming follow closes the modal");
 ctx.getOnMsg()({ type: "flagger:followState", following: true });
-assert(btn.classList.contains("__cmt_on"), "button shows the following state");
-assert(/Following/.test(btn.textContent), "button label is Following");
+assert(
+  !ctx.doc.getElementById("__cmt_modal_backdrop"),
+  "modal closes once following is confirmed",
+);
 
 console.log("\nALL " + pass + " ASSERTIONS PASSED");

@@ -41,8 +41,8 @@ loadable unpacked extension.
 | -------------------- | ------------------------------------------------------------------------------------------- |
 | `manifest.json`      | Extension manifest (Manifest V3).                                                           |
 | `background.js`      | Service worker; injects on toolbar click and re-injects after navigation when Follow is on. |
-| `enable-follow.html` | Small page where you grant the optional host permission for Follow.                         |
-| `enable-follow.js`   | Logic for that page (requests `<all_urls>` on the Allow click).                             |
+| `enable-follow.html` | The Follow modal — an extension page embedded in-page as an iframe.                         |
+| `enable-follow.js`   | Logic for that modal (requests `<all_urls>` on the Allow click).                            |
 | `src/`               | Overlay source modules (see below); `src/index.js` is the entry point.                      |
 | `build.js`           | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files.                 |
 | `dist/`              | Build output and the folder you load into Chrome (generated; git-ignored).                  |
@@ -121,16 +121,20 @@ mid-form.
 
 By default the overlay lives only on the page it was opened on — navigate away
 and it's gone (your session and flags still persist; click the icon to bring it
-back). Turn on **Follow** to have the overlay automatically reappear on each new
-page so a multi-page session feels continuous.
+back). **Follow** keeps the overlay with you: once on, the background worker
+re-injects it after every navigation so a multi-page session feels continuous.
 
-- Click **Follow** in the toolbar. The first time, a small window asks Chrome
-  for permission to run on the pages you visit (the optional `<all_urls>` host
-  permission). Approve once and the overlay re-injects itself after every
-  navigation; the button lights up to show it's on.
-- Click **Follow** again to stop, or **Copy & Exit** / close the overlay.
-- Don't want to commit up front? Just keep working per-page — after you navigate
-  and re-open Flagger, a one-time hint points you to the toggle.
+There's no Follow button taking up space in the toolbar. Instead, after you've
+been working across pages and re-open Flagger on a new page, an **in-page modal**
+offers to turn Follow on (shown once per session). The modal is an embedded
+extension page, so its **Allow** button can request the permission directly —
+no separate browser window.
+
+- **Allow** in the modal → Chrome asks for access to the sites you visit (the
+  optional `<all_urls>` host permission). Approve once and the overlay reappears
+  on every page you navigate to.
+- To stop following, **Copy & Exit** or close the overlay (✕) — both end
+  following for that tab.
 
 This permission is **optional and opt-in**: a fresh install requests nothing
 broad, so there's no "read your data on all websites" warning until _you_ turn

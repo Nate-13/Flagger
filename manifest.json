@@ -21,5 +21,11 @@
     "128": "icon-128.png"
   },
   "permissions": ["activeTab", "scripting", "storage"],
-  "optional_host_permissions": ["<all_urls>"]
+  "optional_host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "resources": ["enable-follow.html", "enable-follow.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

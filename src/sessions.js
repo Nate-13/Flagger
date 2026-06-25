@@ -113,6 +113,17 @@ export function finishSession() {
   saveStore();
 }
 
+// Remember that we offered Follow for the open session, so it's offered at most
+// once per session.
+export function markFollowPrompted() {
+  if (!STATE.store || !STATE.sessionId) return;
+  var sess = findSession(STATE.sessionId);
+  if (sess && !sess.followPrompted) {
+    sess.followPrompted = true;
+    saveStore();
+  }
+}
+
 // Park the current open session (kept in history) and start a clean slate.
 export function newSession() {
   if (STATE.sessionId) {
@@ -252,12 +263,13 @@ export function initSessions() {
         (open.flags || []).some(function (f) {
           return f.url !== location.href;
         }),
+        !!open.followPrompted,
       );
     } else if (STATE.flags.length) {
       persist(); // user flagged before storage finished loading
-      noteResume(false);
+      noteResume(false, false);
     } else {
-      noteResume(false);
+      noteResume(false, false);
     }
   });
 }
