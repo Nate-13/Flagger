@@ -100,6 +100,21 @@ back.
 - **New session** — start a clean slate without copying; the previous open
   session is kept in History as a draft.
 
+## Browsing the page (pause-through)
+
+While flagging, Flagger intercepts clicks so you can flag elements instead of
+triggering them. When you need to actually _use_ the page — open a menu, follow
+a link, fill a form — toggle **Browse** mode:
+
+- Click **Pause** in the toolbar (or press **Alt+Shift+P**). The toolbar greys
+  out to show flagging is off, and clicks/hovers pass straight through to the
+  page as normal.
+- Your flags and the open session stay intact in the background.
+- Click **Resume** (or **Alt+Shift+P** again) to start flagging once more.
+
+The shortcut is ignored while you're typing in a page input, so it won't fire
+mid-form.
+
 ## Development
 
 ```bash

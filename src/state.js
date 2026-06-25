@@ -12,6 +12,7 @@ export const STATE = {
   dragOffX: 0,
   dragOffY: 0,
   exiting: false,
+  paused: false, // browsing mode: interception off, native page clicks pass through
   store: null, // loaded { sessions: [...], openId } from chrome.storage
   sessionId: null, // id of the current open session (null until first flag)
   history: null, // history panel element

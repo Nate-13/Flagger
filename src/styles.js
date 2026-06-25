@@ -402,6 +402,15 @@ export function injectStyles() {
       BLACK +
       " !important; opacity: 0.5; margin-bottom: 5px; max-width: 100%;",
     "  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }",
+
+    // ============================================================
+    // BROWSING (paused) — interception off, native page clicks pass through
+    // ============================================================
+    // grey out the hazard tape so it's obvious flagging is off
+    "#__cmt_toolbar.__cmt_paused { cursor: default; }",
+    "#__cmt_toolbar.__cmt_paused::before { background: #c9c9c9; }",
+    // dim the view actions; the Resume + Copy buttons stay prominent
+    "#__cmt_toolbar.__cmt_paused button:not(#__cmt_pause):not(.primary) { opacity: 0.4; }",
   ].join("\n");
   document.head.appendChild(style);
   STATE.style = style;

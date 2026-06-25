@@ -9,7 +9,7 @@ import { copyText } from "./clipboard.js";
 import { repositionBadges } from "./badges.js";
 import { togglePanel, repositionOpenBoxes } from "./panel.js";
 import { toggleHistory } from "./history.js";
-import { selectElement } from "./flags.js";
+import { selectElement, closePopup } from "./flags.js";
 import { finishSession, hasStorage, initSessions } from "./sessions.js";
 
 // ---------------------------------------------------------------- drag
@@ -57,6 +57,13 @@ function isOurUI(el) {
 }
 function onMouseOver(e) {
   if (STATE.dragging || STATE.popup) return;
+  if (STATE.paused) {
+    if (STATE.hoverEl) {
+      STATE.hoverEl.classList.remove("__cmt_outline");
+      STATE.hoverEl = null;
+    }
+    return;
+  }
   if (isOurUI(e.target)) {
     if (STATE.hoverEl) {
       STATE.hoverEl.classList.remove("__cmt_outline");
@@ -74,6 +81,7 @@ function onMouseOut(e) {
 }
 function onClick(e) {
   if (STATE.dragging) return;
+  if (STATE.paused) return; // browsing: let the click reach the page untouched
   if (isOurUI(e.target)) return;
   if (STATE.popup) return;
   e.preventDefault();
@@ -87,6 +95,51 @@ function onScroll() {
 function onResize() {
   repositionBadges();
   repositionOpenBoxes();
+}
+
+// ---------------------------------------------------- pause / browse mode
+export function togglePause() {
+  setPaused(!STATE.paused);
+}
+
+function setPaused(paused) {
+  STATE.paused = paused;
+  var btn = document.getElementById("__cmt_pause");
+  if (paused) {
+    closePopup(); // can't be mid-flag while browsing
+    if (STATE.hoverEl) {
+      STATE.hoverEl.classList.remove("__cmt_outline");
+      STATE.hoverEl = null;
+    }
+    STATE.toolbar.classList.add("__cmt_paused");
+    if (btn) {
+      btn.classList.add("primary");
+      btn.innerHTML = ICON.play + " Resume";
+      btn.title = "Resume flagging (Alt+Shift+P)";
+    }
+    flash("Browsing — click Resume to flag");
+  } else {
+    STATE.toolbar.classList.remove("__cmt_paused");
+    if (btn) {
+      btn.classList.remove("primary");
+      btn.innerHTML = ICON.pause + " Pause";
+      btn.title = "Pause flagging — interact with the page (Alt+Shift+P)";
+    }
+    flash("Flagging resumed");
+  }
+}
+
+function onKeyDown(e) {
+  // Alt+Shift+P toggles browse/flag. Ignore while typing in a field.
+  if (!(e.altKey && e.shiftKey) || e.code !== "KeyP") return;
+  var ae = document.activeElement;
+  if (
+    ae &&
+    (ae.isContentEditable || /^(input|textarea|select)$/i.test(ae.tagName))
+  )
+    return;
+  e.preventDefault();
+  togglePause();
 }
 
 // ---------------------------------------------------- output + cleanup
@@ -154,6 +207,7 @@ export function cleanup() {
   document.removeEventListener("mouseover", onMouseOver, true);
   document.removeEventListener("mouseout", onMouseOut, true);
   document.removeEventListener("click", onClick, true);
+  document.removeEventListener("keydown", onKeyDown, true);
   document.removeEventListener("mousemove", onDragMove);
   document.removeEventListener("mouseup", onDragEnd);
   window.removeEventListener("scroll", onScroll, true);
@@ -194,6 +248,9 @@ export function mount() {
     '<span class="grip" title="Drag to move">' +
     ICON.grip +
     "</span>" +
+    '<button id="__cmt_pause" title="Pause flagging — interact with the page (Alt+Shift+P)">' +
+    ICON.pause +
+    " Pause</button>" +
     '<button id="__cmt_history">' +
     ICON.history +
     " History</button>" +
@@ -209,6 +266,7 @@ export function mount() {
   document.body.appendChild(toolbar);
   STATE.toolbar = toolbar;
 
+  document.getElementById("__cmt_pause").addEventListener("click", togglePause);
   document
     .getElementById("__cmt_history")
     .addEventListener("click", toggleHistory);
@@ -224,6 +282,7 @@ export function mount() {
   document.addEventListener("mouseover", onMouseOver, true);
   document.addEventListener("mouseout", onMouseOut, true);
   document.addEventListener("click", onClick, true);
+  document.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("scroll", onScroll, true);
   window.addEventListener("resize", onResize);
 
