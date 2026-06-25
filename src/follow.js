@@ -118,5 +118,13 @@ export function closeFollowModal() {
 function onModalMessage(e) {
   if (!e || typeof e.origin !== "string") return;
   if (e.origin.indexOf("chrome-extension://") !== 0) return;
-  if (e.data === "flagger:follow-done") closeFollowModal();
+  var d = e.data;
+  if (!d || typeof d !== "object" || d.source !== "flagger-follow") return;
+  if (d.type === "size") {
+    // size the iframe to its content so there's no empty space below
+    var frame = STATE.modal && STATE.modal.querySelector("iframe");
+    if (frame && d.height > 0) frame.style.height = Math.ceil(d.height) + "px";
+  } else if (d.type === "done") {
+    closeFollowModal();
+  }
 }

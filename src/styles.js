@@ -418,8 +418,10 @@ export function injectStyles() {
     "#__cmt_modal_backdrop { position: fixed; inset: 0; z-index: 2147483647;",
     "  background: rgba(10,10,10,0.45); display: flex; align-items: center; justify-content: center;",
     "  animation: __cmt_fadeIn 0.15s ease both; }",
-    "#__cmt_modal_backdrop iframe { width: 440px; max-width: calc(100vw - 32px); height: 320px;",
-    "  border: 3px solid " +
+    // height is a fallback; the iframe reports its real content height and the
+    // content script sizes the frame to match (no empty space at the bottom).
+    "#__cmt_modal_backdrop iframe { width: 440px; max-width: calc(100vw - 32px); height: 250px;",
+    "  display: block; border: 3px solid " +
       BLACK +
       "; border-radius: 8px; background: " +
       CREAM +

@@ -4,15 +4,23 @@
 // page, not a content script).
 const tabId = Number(new URLSearchParams(location.search).get("tab"));
 
-function done() {
-  // Tell the content script that hosts this iframe to close the modal.
+function post(type, extra) {
   try {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage("flagger:follow-done", "*");
-    } else {
+      window.parent.postMessage(
+        Object.assign({ source: "flagger-follow", type }, extra || {}),
+        "*",
+      );
+    } else if (type === "done") {
       window.close(); // standalone fallback
     }
   } catch (e) {}
+}
+
+// Tell the host to size the iframe to our actual content (no empty space).
+function reportSize() {
+  const h = Math.ceil(document.body.getBoundingClientRect().height);
+  if (h > 0) post("size", { height: h });
 }
 
 document.getElementById("allow").addEventListener("click", () => {
@@ -20,8 +28,12 @@ document.getElementById("allow").addEventListener("click", () => {
     if (granted) {
       chrome.runtime.sendMessage({ type: "flagger:followGranted", tabId });
     }
-    done();
+    post("done");
   });
 });
 
-document.getElementById("cancel").addEventListener("click", done);
+document.getElementById("cancel").addEventListener("click", () => post("done"));
+
+reportSize();
+requestAnimationFrame(reportSize);
+window.addEventListener("resize", reportSize);

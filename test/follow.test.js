@@ -123,10 +123,22 @@ assert(
   "modal hosts the enable-follow iframe targeting this tab",
 );
 
+console.log("[1b] iframe reports its height → frame is sized to fit");
+ctx.w.dispatchEvent(
+  new ctx.w.MessageEvent("message", {
+    data: { source: "flagger-follow", type: "size", height: 222 },
+    origin: EXT_ORIGIN,
+  }),
+);
+assert(
+  frame.style.height === "222px",
+  "iframe height matches reported content height (no empty space)",
+);
+
 console.log("[2] iframe 'done' message closes the modal");
 ctx.w.dispatchEvent(
   new ctx.w.MessageEvent("message", {
-    data: "flagger:follow-done",
+    data: { source: "flagger-follow", type: "done" },
     origin: EXT_ORIGIN,
   }),
 );
@@ -141,7 +153,7 @@ await tick();
 assert(!!ctx.doc.getElementById("__cmt_modal_backdrop"), "modal is open");
 ctx.w.dispatchEvent(
   new ctx.w.MessageEvent("message", {
-    data: "flagger:follow-done",
+    data: { source: "flagger-follow", type: "done" },
     origin: "https://evil.example.com",
   }),
 );
