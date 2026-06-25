@@ -11,6 +11,7 @@ import { togglePanel, repositionOpenBoxes } from "./panel.js";
 import { toggleHistory } from "./history.js";
 import { selectElement, closePopup } from "./flags.js";
 import { finishSession, hasStorage, initSessions } from "./sessions.js";
+import { initFollow, toggleFollow } from "./follow.js";
 
 // ---------------------------------------------------------------- drag
 function onDragStart(e) {
@@ -251,6 +252,9 @@ export function mount() {
     '<button id="__cmt_pause" title="Pause flagging — interact with the page (Alt+Shift+P)">' +
     ICON.pause +
     " Pause</button>" +
+    '<button id="__cmt_follow" title="Follow across pages (asks for permission once)">' +
+    ICON.link +
+    " Follow</button>" +
     '<button id="__cmt_history">' +
     ICON.history +
     " History</button>" +
@@ -267,6 +271,9 @@ export function mount() {
   STATE.toolbar = toolbar;
 
   document.getElementById("__cmt_pause").addEventListener("click", togglePause);
+  document
+    .getElementById("__cmt_follow")
+    .addEventListener("click", toggleFollow);
   document
     .getElementById("__cmt_history")
     .addEventListener("click", toggleHistory);
@@ -286,5 +293,6 @@ export function mount() {
   window.addEventListener("scroll", onScroll, true);
   window.addEventListener("resize", onResize);
 
+  initFollow();
   initSessions();
 }

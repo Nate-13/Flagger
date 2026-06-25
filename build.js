@@ -10,6 +10,8 @@ const OUT = "dist";
 const STATICS = [
   "manifest.json",
   "background.js",
+  "enable-follow.html",
+  "enable-follow.js",
   "icon-16.png",
   "icon-48.png",
   "icon-128.png",

@@ -7,6 +7,7 @@ import { copyText } from "./clipboard.js";
 import { addBadge, renumberBadges, repositionBadges } from "./badges.js";
 import { updateCount, renderPanel, openPanel } from "./panel.js";
 import { closeHistory, renderHistory } from "./history.js";
+import { noteResume } from "./follow.js";
 
 const STORE_KEY = "__flagger_store_v1";
 
@@ -247,8 +248,16 @@ export function initSessions() {
       hydrate(open.flags);
       var n = open.flags ? open.flags.length : 0;
       if (n) flash("Resumed · " + n + " flag" + (n === 1 ? "" : "s"));
+      noteResume(
+        (open.flags || []).some(function (f) {
+          return f.url !== location.href;
+        }),
+      );
     } else if (STATE.flags.length) {
       persist(); // user flagged before storage finished loading
+      noteResume(false);
+    } else {
+      noteResume(false);
     }
   });
 }

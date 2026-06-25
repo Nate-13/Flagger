@@ -37,21 +37,23 @@ The overlay is written as small ES modules in `src/` and bundled by
 injects. The build also copies the static files so `dist/` is a complete,
 loadable unpacked extension.
 
-| Path            | Purpose                                                                     |
-| --------------- | --------------------------------------------------------------------------- |
-| `manifest.json` | Extension manifest (Manifest V3).                                           |
-| `background.js` | Service worker; injects `content.js` into the active tab on toolbar click.  |
-| `src/`          | Overlay source modules (see below); `src/index.js` is the entry point.      |
-| `build.js`      | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files. |
-| `dist/`         | Build output and the folder you load into Chrome (generated; git-ignored).  |
-| `test/`         | jsdom integration test for the session/history state machine.               |
-| `icon-*.png`    | Toolbar / store icons (16, 48, 128 px).                                     |
+| Path                 | Purpose                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `manifest.json`      | Extension manifest (Manifest V3).                                                           |
+| `background.js`      | Service worker; injects on toolbar click and re-injects after navigation when Follow is on. |
+| `enable-follow.html` | Small page where you grant the optional host permission for Follow.                         |
+| `enable-follow.js`   | Logic for that page (requests `<all_urls>` on the Allow click).                             |
+| `src/`               | Overlay source modules (see below); `src/index.js` is the entry point.                      |
+| `build.js`           | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files.                 |
+| `dist/`              | Build output and the folder you load into Chrome (generated; git-ignored).                  |
+| `test/`              | jsdom integration tests (sessions, pass-through, follow).                                   |
+| `icon-*.png`         | Toolbar / store icons (16, 48, 128 px).                                                     |
 
 The `src/` modules: `index` (entry/guard) → `overlay` (toolbar, page events,
-copy/exit, teardown) which pulls in `flags` (selection + popup), `panel` (flags
-list), `history` (saved sessions), `sessions` (persistence), `badges`,
-`markdown`, `clipboard`, `styles`, `icons`, `theme`, `utils`, and the shared
-`state` object.
+pause, copy/exit, teardown) which pulls in `flags` (selection + popup), `panel`
+(flags list), `history` (saved sessions), `sessions` (persistence), `follow`
+(follow-across-pages), `badges`, `markdown`, `clipboard`, `styles`, `icons`,
+`theme`, `utils`, and the shared `state` object.
 
 ## Installing locally (unpacked)
 
@@ -115,6 +117,27 @@ a link, fill a form — toggle **Browse** mode:
 The shortcut is ignored while you're typing in a page input, so it won't fire
 mid-form.
 
+## Follow across pages
+
+By default the overlay lives only on the page it was opened on — navigate away
+and it's gone (your session and flags still persist; click the icon to bring it
+back). Turn on **Follow** to have the overlay automatically reappear on each new
+page so a multi-page session feels continuous.
+
+- Click **Follow** in the toolbar. The first time, a small window asks Chrome
+  for permission to run on the pages you visit (the optional `<all_urls>` host
+  permission). Approve once and the overlay re-injects itself after every
+  navigation; the button lights up to show it's on.
+- Click **Follow** again to stop, or **Copy & Exit** / close the overlay.
+- Don't want to commit up front? Just keep working per-page — after you navigate
+  and re-open Flagger, a one-time hint points you to the toggle.
+
+This permission is **optional and opt-in**: a fresh install requests nothing
+broad, so there's no "read your data on all websites" warning until _you_ turn
+Follow on. Under the hood the background worker watches for completed
+navigations and re-injects the overlay into tabs where Follow is enabled
+(`activeTab` can't do this — Chrome revokes it the moment a tab navigates).
+
 ## Development
 
 ```bash
@@ -142,7 +165,9 @@ the toolbar entry point is `action`, and the overlay is injected with
 `chrome.scripting.executeScript`. It requests `activeTab` + `scripting` (host
 access is granted to the current tab at the moment you click the icon, so there
 are no broad "read all your data on all websites" warnings) plus `storage` for
-saving sessions locally.
+saving sessions locally. The broad `<all_urls>` host access is declared as an
+**optional** permission, requested at runtime only if you enable
+[Follow across pages](#follow-across-pages).
 
 ## Roadmap ideas
 

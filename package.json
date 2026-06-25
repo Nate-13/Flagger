@@ -8,8 +8,8 @@
     "build": "node build.js",
     "dev": "node build.js --watch",
     "pretest": "node build.js",
-    "test": "node test/sessions.test.js && node test/passthrough.test.js",
-    "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\" build.js background.js manifest.json README.md"
+    "test": "node test/sessions.test.js && node test/passthrough.test.js && node test/follow-background.test.js && node test/follow.test.js",
+    "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\" \"*.{js,json,html,md}\""
   },
   "devDependencies": {
     "esbuild": "^0.28.1",

@@ -411,6 +411,16 @@ export function injectStyles() {
     "#__cmt_toolbar.__cmt_paused::before { background: #c9c9c9; }",
     // dim the view actions; the Resume + Copy buttons stay prominent
     "#__cmt_toolbar.__cmt_paused button:not(#__cmt_pause):not(.primary) { opacity: 0.4; }",
+
+    // Follow toggle: lit when following across pages
+    "#__cmt_toolbar #__cmt_follow.__cmt_on { background: " +
+      SUCCESS +
+      "; box-shadow: inset 0 0 0 2px " +
+      BLACK +
+      "; }",
+    "#__cmt_toolbar #__cmt_follow.__cmt_on:hover { background: " +
+      SUCCESS +
+      "; }",
   ].join("\n");
   document.head.appendChild(style);
   STATE.style = style;
