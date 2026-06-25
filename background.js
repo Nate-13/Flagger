@@ -47,20 +47,37 @@ async function hasFollowPermission() {
   }
 }
 
-function injectOverlay(tabId) {
-  return chrome.scripting
-    .executeScript({ target: { tabId }, files: ["content.js"] })
-    .catch(() => {}); // ignore restricted pages / races
+// Only http(s) pages are injectable. chrome://, the Web Store, view-source:,
+// the New Tab page, etc. are off-limits and executeScript errors on them.
+function isInjectableUrl(url) {
+  return typeof url === "string" && /^https?:\/\//i.test(url);
 }
 
-// Toolbar click: inject into the active tab (activeTab gesture).
+// Never rejects: swallows both synchronous throws (e.g. "Cannot access a
+// chrome:// URL") and async rejections (tab closed mid-flight, races).
+async function injectOverlay(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["content.js"],
+    });
+  } catch (e) {
+    /* restricted page / closed tab / race — ignore */
+  }
+}
+
+// Toolbar click: inject into the active tab (activeTab gesture). Skip pages we
+// know we can't touch; otherwise attempt (injectOverlay swallows failures).
 chrome.action.onClicked.addListener((tab) => {
-  if (tab && tab.id != null) injectOverlay(tab.id);
+  if (!tab || tab.id == null) return;
+  if (tab.url && !isInjectableUrl(tab.url)) return;
+  injectOverlay(tab.id);
 });
 
 // Re-inject after navigation in tabs where Follow is on.
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete") return;
+  if (!isInjectableUrl(tab && tab.url)) return;
   if (!(await isEngaged(tabId))) return;
   if (!(await hasFollowPermission())) return;
   injectOverlay(tabId);

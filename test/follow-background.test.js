@@ -82,9 +82,11 @@ assert(
   "onClicked injects content.js",
 );
 
+const HTTP = { url: "https://example.com" };
+
 console.log("[2] no re-inject when tab is not following");
 C.exec.length = 0;
-await L.onUpdated(7, { status: "complete" });
+await L.onUpdated(7, { status: "complete" }, HTTP);
 assert(C.exec.length === 0, "navigation does not re-inject an unengaged tab");
 
 console.log("[3] granting permission engages + notifies the tab");
@@ -98,7 +100,7 @@ assert(
 
 console.log("[4] re-inject after navigation when following");
 C.exec.length = 0;
-await L.onUpdated(7, { status: "complete" });
+await L.onUpdated(7, { status: "complete" }, HTTP);
 await tick();
 assert(
   C.exec.some((c) => c.target.tabId === 7),
@@ -107,8 +109,17 @@ assert(
 
 console.log("[5] only on completed navigations");
 C.exec.length = 0;
-await L.onUpdated(7, { status: "loading" });
+await L.onUpdated(7, { status: "loading" }, HTTP);
 assert(C.exec.length === 0, "ignores non-complete navigation updates");
+
+console.log("[5b] never injects into restricted (chrome://) URLs");
+C.exec.length = 0;
+await L.onUpdated(7, { status: "complete" }, { url: "chrome://extensions" });
+await tick();
+assert(
+  C.exec.length === 0,
+  "engaged tab on a chrome:// page is left alone (no executeScript)",
+);
 
 console.log("[6] getFollowState reflects engagement + returns the tab id");
 let state;
@@ -125,7 +136,7 @@ console.log("[7] disengage stops following");
 L.onMessage({ type: "flagger:disengage" }, { tab: { id: 7 } }, () => {});
 await tick();
 C.exec.length = 0;
-await L.onUpdated(7, { status: "complete" });
+await L.onUpdated(7, { status: "complete" }, HTTP);
 await tick();
 assert(C.exec.length === 0, "navigation no longer re-injects after disengage");
 
