@@ -141,7 +141,6 @@ export function newSession() {
   STATE.sessionId = null;
   clearFlagsUI();
   saveStore();
-  flash("New session started");
   if (STATE.historyOpen) renderHistory();
 }
 
@@ -165,16 +164,6 @@ export function reopenSession(id) {
   hydrate(target.flags);
   closeHistory();
   if (!STATE.panelOpen) openPanel();
-  var pinned = STATE.flags.filter(function (c) {
-    return c.badge;
-  }).length;
-  flash(
-    "Reopened · " +
-      STATE.flags.length +
-      " flag" +
-      (STATE.flags.length === 1 ? "" : "s") +
-      (pinned ? " (" + pinned + " on this page)" : ""),
-  );
 }
 
 function dropSession(id) {
@@ -257,8 +246,6 @@ export function initSessions() {
       STATE.sessionId = open.id;
       STATE.store.openId = open.id;
       hydrate(open.flags);
-      var n = open.flags ? open.flags.length : 0;
-      if (n) flash("Resumed · " + n + " flag" + (n === 1 ? "" : "s"));
       noteResume(
         (open.flags || []).some(function (f) {
           return f.url !== location.href;

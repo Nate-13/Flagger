@@ -66,7 +66,7 @@ function setFollowing(on) {
   STATE.following = on;
   if (on) {
     closeFollowModal();
-    if (!was) flash("Following — Flagger will stay with you across pages");
+    if (!was) flash("Following across pages");
   }
 }
 

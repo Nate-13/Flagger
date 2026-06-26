@@ -119,7 +119,6 @@ function setPaused(paused) {
       btn.innerHTML = ICON.play + " Resume";
       btn.title = "Resume flagging (Alt+Shift+P)";
     }
-    flash("Browsing — click Resume to flag");
   } else {
     STATE.toolbar.classList.remove("__cmt_paused");
     if (btn) {
@@ -127,7 +126,6 @@ function setPaused(paused) {
       btn.innerHTML = ICON.pause + " Pause";
       btn.title = "Pause flagging — interact with the page (Alt+Shift+P)";
     }
-    flash("Flagging resumed");
   }
 }
 
