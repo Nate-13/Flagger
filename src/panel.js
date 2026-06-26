@@ -4,7 +4,7 @@ import { ICON } from "./icons.js";
 import { DANGER } from "./theme.js";
 import { escapeHtml, hostOf, flash } from "./utils.js";
 import { renumberBadges } from "./badges.js";
-import { persist } from "./sessions.js";
+import { persist, navigateToFlag } from "./sessions.js";
 import { closeHistory } from "./history.js";
 import { copyAndExit } from "./overlay.js";
 
@@ -110,6 +110,7 @@ export function renderPanel() {
     card.className = "__cmt_card";
     card.dataset.id = c.id;
     var crossPage = c.url && c.url !== location.href;
+    if (crossPage) card.title = "On " + hostOf(c.url) + " — click to go there";
     card.innerHTML =
       (crossPage
         ? '<div class="host">↗ ' + escapeHtml(hostOf(c.url)) + "</div>"
@@ -203,7 +204,7 @@ export function removeFlag(c) {
 
 export function locateFlag(c) {
   if (c.url && c.url !== location.href) {
-    flash("Flag is on another page", DANGER);
+    navigateToFlag(c); // it's on another page — go there (and highlight on arrival)
     return;
   }
   if (!c.el || !c.el.isConnected) {

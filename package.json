@@ -8,7 +8,7 @@
     "build": "node build.js",
     "dev": "node build.js --watch",
     "pretest": "node build.js",
-    "test": "node test/sessions.test.js && node test/passthrough.test.js && node test/follow-background.test.js && node test/follow.test.js",
+    "test": "node test/sessions.test.js && node test/passthrough.test.js && node test/follow-background.test.js && node test/follow.test.js && node test/navigate.test.js",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\" \"*.{js,json,html,md}\""
   },
   "devDependencies": {

@@ -5,11 +5,13 @@ import { flash } from "./utils.js";
 import { buildMarkdownFrom } from "./markdown.js";
 import { copyText } from "./clipboard.js";
 import { addBadge, renumberBadges, repositionBadges } from "./badges.js";
-import { updateCount, renderPanel, openPanel } from "./panel.js";
+import { updateCount, renderPanel, openPanel, locateFlag } from "./panel.js";
 import { closeHistory, renderHistory } from "./history.js";
 import { noteResume } from "./follow.js";
 
 const STORE_KEY = "__flagger_store_v1";
+// Where a cross-page "go to this flag" request is stashed across the navigation.
+const LOCATE_KEY = "__flagger_locate";
 
 export function hasStorage() {
   try {
@@ -246,6 +248,7 @@ export function initSessions() {
       STATE.sessionId = open.id;
       STATE.store.openId = open.id;
       hydrate(open.flags);
+      resolvePendingLocate(); // we may have navigated here to view a flag
       noteResume(
         (open.flags || []).some(function (f) {
           return f.url !== location.href;
@@ -259,6 +262,63 @@ export function initSessions() {
       noteResume(false, false);
     }
   });
+}
+
+// Go to a flag that lives on another page: stash the target, then navigate.
+// When the overlay loads on that page (Follow re-injects it, or the user
+// re-opens), resolvePendingLocate() scrolls to and highlights the flag.
+export function navigateToFlag(c) {
+  if (!c || !/^https?:\/\//i.test(c.url || "")) {
+    flash("Can't open that page", DANGER);
+    return;
+  }
+  var go = function () {
+    try {
+      location.assign(c.url);
+    } catch (e) {
+      location.href = c.url;
+    }
+  };
+  if (!hasStorage()) {
+    go();
+    return;
+  }
+  try {
+    // navigate only once the target is saved, so it survives the page change
+    chrome.storage.local.set(
+      defObj(LOCATE_KEY, { url: c.url, id: c.id, ts: Date.now() }),
+      go,
+    );
+  } catch (e) {
+    go();
+  }
+}
+
+function resolvePendingLocate() {
+  if (!hasStorage()) return;
+  try {
+    chrome.storage.local.get(LOCATE_KEY, function (res) {
+      var p = res && res[LOCATE_KEY];
+      if (!p) return;
+      var stale = !p.ts || Date.now() - p.ts > 30000;
+      if (p.url !== location.href || stale) {
+        if (stale) chrome.storage.local.remove(LOCATE_KEY);
+        return;
+      }
+      chrome.storage.local.remove(LOCATE_KEY);
+      var target = null;
+      for (var i = 0; i < STATE.flags.length; i++) {
+        if (STATE.flags[i].id === p.id) {
+          target = STATE.flags[i];
+          break;
+        }
+      }
+      if (target)
+        setTimeout(function () {
+          locateFlag(target);
+        }, 150);
+    });
+  } catch (e) {}
 }
 
 // Copy a session straight from the history list — no need to open it.

@@ -91,7 +91,9 @@ back.
 - **One open session at a time** — clicking the icon resumes the session you
   were building and re-pins this page's flags. A session can span multiple pages
   and sites; flags from other pages stay in the set (shown with a `↗ host` hint)
-  but are only re-pinned on the page they belong to.
+  but are only re-pinned on the page they belong to. Click a cross-page flag in
+  the list to jump to its page — it scrolls to and highlights the element once
+  the page loads.
 - **Copy ends a session** — **Copy & Exit** marks the session done and files it
   in History. The next time you open Flagger you start fresh.
 - **Closing keeps it open** — closing the overlay (the ✕) or navigating away
