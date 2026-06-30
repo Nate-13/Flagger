@@ -6,79 +6,111 @@
     <title>Flagger — Follow across pages</title>
     <style>
       :root {
-        --hazard: #ffc800;
-        --hazard-dark: #e6b400;
-        --black: #0a0a0a;
-        --cream: #fffdf5;
+        --surface: #1c1b18;
+        --text: #f2efe9;
+        --muted: #a29c8e;
+        --faint: #6f6a5e;
+        --line: rgba(255, 255, 255, 0.14);
+        --gold: #f2b824;
+        --gold-edge: #caa017;
+        --gold-text: #2a2305;
       }
       * {
         box-sizing: border-box;
       }
       body {
         margin: 0;
-        padding: 22px;
-        background: var(--cream);
-        color: var(--black);
+        padding: 20px 22px;
+        background: var(--surface);
+        color: var(--text);
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: 13.5px;
+        line-height: 1.55;
       }
       h1 {
-        font-size: 16px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 9px;
+      }
+      h1 .ico {
+        display: inline-flex;
+        color: var(--gold);
       }
       p {
-        margin: 0 0 12px;
+        margin: 0 0 10px;
+        color: var(--text);
+      }
+      p.note {
+        font-size: 12px;
+        color: var(--faint);
       }
       .row {
         display: flex;
-        gap: 10px;
-        margin-top: 18px;
+        gap: 9px;
+        margin-top: 16px;
       }
       button {
         flex: 1;
-        padding: 10px 14px;
-        border-radius: 5px;
-        border: 2px solid var(--black);
+        height: 38px;
+        border-radius: 8px;
+        border: 1px solid transparent;
         cursor: pointer;
-        font-weight: 800;
+        font-weight: 600;
         font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
         font-family: inherit;
+        transition: background 0.14s;
       }
       .allow {
-        background: var(--hazard);
-        box-shadow: 3px 3px 0 var(--black);
+        background: linear-gradient(180deg, #f6c63e, #efb31d);
+        color: var(--gold-text);
+        border-color: var(--gold-edge);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.42),
+          0 1px 2px rgba(0, 0, 0, 0.35);
       }
       .allow:hover {
-        background: var(--hazard-dark);
+        background: linear-gradient(180deg, #f8cb4a, #f2b824);
       }
       .cancel {
-        background: #fff;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-color: var(--line);
       }
       .cancel:hover {
-        background: #f2f2f2;
-      }
-      .note {
-        font-size: 12px;
-        opacity: 0.65;
+        background: rgba(255, 255, 255, 0.08);
       }
     </style>
   </head>
   <body>
-    <h1>Follow across pages</h1>
+    <h1>
+      <span class="ico" aria-hidden="true">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+          <line x1="4" y1="22" x2="4" y2="15" />
+        </svg>
+      </span>
+      Follow across pages
+    </h1>
     <p>
       Let Flagger stay open as you move between pages, so your session keeps
       going without re-opening it each time.
     </p>
     <p class="note">
       This needs permission to run on the sites you visit. Chrome will ask you
-      to confirm. Closing Flagger (✕ or Copy &amp; Exit) stops it.
+      to confirm. Closing Flagger (✕ or Copy &amp; exit) stops it.
     </p>
     <div class="row">
       <button class="cancel" id="cancel">Not now</button>

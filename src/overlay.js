@@ -21,6 +21,10 @@ import { initFollow, teardownFollow } from "./follow.js";
 
 var dwellTimer = null;
 var leaveTimer = null;
+var dragStartX = 0,
+  dragStartY = 0,
+  dragRight = 0,
+  dragBottom = 0;
 
 // ------------------------------------------------------- click capture
 function isOurUI(el) {
@@ -40,7 +44,7 @@ function clearHover() {
   }
 }
 function onMouseOver(e) {
-  if (STATE.popup) return;
+  if (STATE.popup || STATE.dragging) return;
   if (STATE.paused || isOurUI(e.target)) {
     clearHover();
     return;
@@ -91,6 +95,7 @@ function onIslandEnter() {
   dwellTimer = setTimeout(openPanel, 300); // linger to grow the card
 }
 function onIslandLeave() {
+  if (STATE.dragging) return; // stay open while being dragged
   clearTimeout(dwellTimer);
   if (STATE.pinned) return; // pinned cards wait for a click-away
   leaveTimer = setTimeout(function () {
@@ -98,6 +103,50 @@ function onIslandLeave() {
     STATE.island.classList.remove("__cmt_hot");
     closePanel();
   }, 240);
+}
+
+// ---------------------------------------------------- drag to reposition
+// Drag the open card by its header to move the whole island. It stays anchored
+// by right/bottom, so the morph keeps growing up-and-left from wherever it sits;
+// the clamp keeps the expanded card on screen.
+function onHeaderDown(e) {
+  if (e.button !== 0 || (e.target.closest && e.target.closest("button")))
+    return;
+  var r = STATE.island.getBoundingClientRect();
+  dragRight = window.innerWidth - r.right;
+  dragBottom = window.innerHeight - r.bottom;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  STATE.dragging = true;
+  STATE.island.classList.add("__cmt_dragging");
+  document.addEventListener("mousemove", onDragMove, true);
+  document.addEventListener("mouseup", onDragEnd, true);
+  e.preventDefault();
+}
+function onDragMove(e) {
+  if (!STATE.dragging) return;
+  var isl = STATE.island;
+  var right = dragRight - (e.clientX - dragStartX);
+  var bottom = dragBottom - (e.clientY - dragStartY);
+  right = Math.max(8, Math.min(right, window.innerWidth - isl.offsetWidth - 8));
+  bottom = Math.max(
+    8,
+    Math.min(bottom, window.innerHeight - isl.offsetHeight - 8),
+  );
+  isl.style.right = right + "px";
+  isl.style.bottom = bottom + "px";
+}
+function onDragEnd() {
+  if (!STATE.dragging) return;
+  STATE.dragging = false;
+  STATE.island.classList.remove("__cmt_dragging");
+  document.removeEventListener("mousemove", onDragMove, true);
+  document.removeEventListener("mouseup", onDragEnd, true);
+  if (!STATE.island.matches(":hover")) {
+    STATE.hot = false;
+    STATE.island.classList.remove("__cmt_hot");
+    closePanel();
+  }
 }
 
 // ---------------------------------------------------- pause / browse mode
@@ -189,6 +238,8 @@ export function cleanup() {
   window.removeEventListener("resize", onResize);
   clearTimeout(dwellTimer);
   clearTimeout(leaveTimer);
+  document.removeEventListener("mousemove", onDragMove, true);
+  document.removeEventListener("mouseup", onDragEnd, true);
   teardownFollow();
   Array.prototype.forEach.call(
     document.querySelectorAll(".__cmt_outline, .__cmt_selected"),
@@ -259,6 +310,7 @@ export function mount() {
 
   island.addEventListener("mouseenter", onIslandEnter);
   island.addEventListener("mouseleave", onIslandLeave);
+  island.querySelector(".__cmt_hd").addEventListener("mousedown", onHeaderDown);
   document.addEventListener("mouseover", onMouseOver, true);
   document.addEventListener("mouseout", onMouseOut, true);
   document.addEventListener("click", onClick, true);

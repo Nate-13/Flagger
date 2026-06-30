@@ -79,7 +79,8 @@ export function injectStyles() {
     // header
     ".__cmt_hd { position: absolute; top: 0; left: 0; right: 0; height: 48px;",
     "  display: flex; align-items: center; gap: 4px; padding: 0 8px 0 16px;",
-    "  border-bottom: 1px solid var(--cmt-line); }",
+    "  border-bottom: 1px solid var(--cmt-line); cursor: grab; }",
+    "#__cmt_island.__cmt_dragging, #__cmt_island.__cmt_dragging .__cmt_hd { cursor: grabbing; }",
     ".__cmt_hd .ttl { font-size: 14px !important; font-weight: 600 !important; color: var(--cmt-text); }",
     ".__cmt_hd .count { display: inline-flex; align-items: center; color: var(--cmt-accent);",
     "  font-size: 13px !important; font-weight: 600 !important; line-height: 1 !important; }",

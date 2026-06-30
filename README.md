@@ -46,14 +46,16 @@ loadable unpacked extension.
 | `src/`               | Overlay source modules (see below); `src/index.js` is the entry point.                      |
 | `build.js`           | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files.                 |
 | `dist/`              | Build output and the folder you load into Chrome (generated; git-ignored).                  |
-| `test/`              | jsdom integration tests (sessions, pass-through, follow).                                   |
+| `test/`              | jsdom integration tests (sessions, pass-through, follow, navigation, comments).             |
 | `icon-*.png`         | Toolbar / store icons (16, 48, 128 px).                                                     |
 
-The `src/` modules: `index` (entry/guard) → `overlay` (toolbar, page events,
-pause, copy/exit, teardown) which pulls in `flags` (selection + popup), `panel`
-(flags list), `history` (saved sessions), `sessions` (persistence), `follow`
-(follow-across-pages), `badges`, `markdown`, `clipboard`, `styles`, `icons`,
-`theme`, `utils`, and the shared `state` object.
+The `src/` modules: `index` (entry/guard) → `overlay` (the morphing "island"
+control, page events, pause, drag, copy/exit, teardown) which pulls in `flags`
+(selection + popup), `panel` (the island's flag list, expand/collapse, and the
+flags⇄history views), `history` (saved sessions), `sessions` (persistence),
+`badges` (on-page pins that expand into comments), `follow` (follow-across-pages),
+`markdown`, `clipboard`, `styles`, `icons`, `theme`, `utils`, and the shared
+`state` object.
 
 ## Installing locally (unpacked)
 
@@ -72,14 +74,29 @@ Then:
 ## Using it
 
 1. Navigate to the page you want to annotate.
-2. Click the **Flagger** toolbar icon to activate the overlay.
-3. Hover to highlight elements; click one to flag it and add a note.
-4. Open the **Flags** panel to review, edit, or delete flags.
-5. Click **Copy & Exit** — the Markdown brief is copied to your clipboard, the
+2. Click the **Flagger** toolbar icon to activate the overlay — a compact
+   control ("the island") appears in the bottom-right corner.
+3. Hover to highlight elements; click one to flag it and add a note. Each flag
+   drops a numbered pin on the page.
+4. **Click a pin** to expand its note in place — read, edit, or delete it
+   without opening the menu — or **hover the island** to grow it into the full
+   flags list.
+5. Click **Copy & exit** — the Markdown brief is copied to your clipboard, the
    overlay closes, and the session is filed away in History.
 
 > Run it again on the same page after closing; Flagger guards against being
 > activated twice at once.
+
+### The island
+
+The control is a single surface in the bottom-right that morphs to fit what
+you're doing: a compact pill at rest (a flag + the count) that grows into a card
+when you hover it. **Pause** lives in the bottom-right corner so it's always one
+click away; the rest of the card (flags list, History, Copy & exit) unfolds
+above it. Drag the card by its header to move it out of the way.
+
+On-page **pins** behave like Figma comments — click one and it expands in place
+into its note, which you can read, edit, or delete without opening the island.
 
 ## Sessions & history
 
@@ -108,11 +125,11 @@ back.
 
 While flagging, Flagger intercepts clicks so you can flag elements instead of
 triggering them. When you need to actually _use_ the page — open a menu, follow
-a link, fill a form — toggle **Browse** mode:
+a link, fill a form — pause flagging:
 
-- Click **Pause** in the toolbar (or press **Alt+Shift+P**). The toolbar greys
-  out to show flagging is off, and clicks/hovers pass straight through to the
-  page as normal.
+- Click the island's **Pause** corner (or press **Alt+Shift+P**). The island
+  turns gold to show flagging is off, and clicks/hovers pass straight through to
+  the page as normal.
 - Your flags and the open session stay intact in the background.
 - Click **Resume** (or **Alt+Shift+P** again) to start flagging once more.
 
