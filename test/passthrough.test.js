@@ -89,17 +89,18 @@ const canceledWhileFlagging = clickEl(ctx, target) === false;
 assert(canceledWhileFlagging, "click is intercepted (preventDefault)");
 assert(!!doc.querySelector("#__cmt_popup"), "flag popup opened");
 
-console.log("[2] pause via toolbar button → browsing");
+console.log("[2] pause via the corner → browsing");
 doc
   .getElementById("__cmt_pause")
   .dispatchEvent(new ctx.w.MouseEvent("click", { bubbles: true }));
 assert(
-  doc.getElementById("__cmt_toolbar").classList.contains("__cmt_paused"),
-  "toolbar shows the paused state",
+  doc.getElementById("__cmt_island").classList.contains("__cmt_paused"),
+  "island shows the paused (browsing) state",
 );
-const pauseBtn = doc.getElementById("__cmt_pause");
-assert(/Resume/.test(pauseBtn.textContent), "button now says Resume");
-assert(pauseBtn.classList.contains("primary"), "Resume button is highlighted");
+assert(
+  !doc.getElementById("__cmt_island").classList.contains("__cmt_open"),
+  "pausing collapses the card (does not expand)",
+);
 assert(
   !doc.querySelector("#__cmt_popup"),
   "pausing closed the open flag popup",
@@ -131,12 +132,8 @@ doc.dispatchEvent(
   }),
 );
 assert(
-  !doc.getElementById("__cmt_toolbar").classList.contains("__cmt_paused"),
+  !doc.getElementById("__cmt_island").classList.contains("__cmt_paused"),
   "shortcut resumed flagging (paused state cleared)",
-);
-assert(
-  /Pause/.test(doc.getElementById("__cmt_pause").textContent),
-  "button says Pause again",
 );
 const canceledAgain = clickEl(ctx, target) === false;
 assert(canceledAgain, "clicks are intercepted again after resuming");

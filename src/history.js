@@ -1,62 +1,19 @@
-// The History panel: lists saved sessions with quick-copy, reopen, and delete.
+// History view: the island's list, switched to show saved sessions with
+// quick-copy, reopen, and delete. (Shares the flags list container; the footer
+// swaps to "New session" — see panel.renderContent / renderFooter.)
 import { STATE } from "./state.js";
 import { ICON } from "./icons.js";
 import { sessionTitle, uniqueUrlCount, relTime } from "./utils.js";
-import { closePanel, positionBox } from "./panel.js";
-import {
-  reopenSession,
-  quickCopy,
-  deleteSession,
-  newSession,
-} from "./sessions.js";
+import { setView, openPanel, sizeIsland } from "./panel.js";
+import { reopenSession, quickCopy, deleteSession } from "./sessions.js";
 
 export function toggleHistory() {
-  if (STATE.historyOpen) closeHistory();
-  else openHistory();
-}
-
-export function openHistory() {
-  if (STATE.history) return;
-  if (STATE.panelOpen) closePanel();
-  var el = document.createElement("div");
-  el.id = "__cmt_history_panel";
-  el.className = "__cmt_panel";
-  el.innerHTML =
-    '<div class="head">' +
-    '  <div class="title"><h3>History</h3></div>' +
-    '  <button class="x" id="__cmt_hist_close" title="Close">' +
-    ICON.close +
-    "</button>" +
-    "</div>" +
-    '<div class="list" id="__cmt_hist_list"></div>' +
-    '<div class="foot">' +
-    '  <button class="newbtn" id="__cmt_hist_new">' +
-    ICON.plus +
-    " New session</button>" +
-    "</div>";
-  document.body.appendChild(el);
-  STATE.history = el;
-  STATE.historyOpen = true;
-  document
-    .getElementById("__cmt_hist_close")
-    .addEventListener("click", closeHistory);
-  document
-    .getElementById("__cmt_hist_new")
-    .addEventListener("click", function () {
-      newSession();
-    });
-  renderHistory();
-  positionBox(el);
-}
-
-export function closeHistory() {
-  if (STATE.history) STATE.history.remove();
-  STATE.history = null;
-  STATE.historyOpen = false;
+  setView(STATE.view === "history" ? "flags" : "history");
+  openPanel();
 }
 
 export function renderHistory() {
-  var list = document.getElementById("__cmt_hist_list");
+  var list = document.getElementById("__cmt_panel_list");
   if (!list) return;
   var sessions = (STATE.store ? STATE.store.sessions : []).filter(function (s) {
     return s.flags && s.flags.length;
@@ -67,6 +24,7 @@ export function renderHistory() {
   if (!sessions.length) {
     list.innerHTML =
       '<div class="empty"><strong>No history yet</strong>Sessions you copy or set aside show up here.</div>';
+    if (STATE.open) sizeIsland();
     return;
   }
   list.innerHTML = "";
@@ -126,4 +84,5 @@ export function renderHistory() {
     });
     list.appendChild(row);
   });
+  if (STATE.open) sizeIsland();
 }

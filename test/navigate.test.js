@@ -94,11 +94,9 @@ console.log("[1] clicking a cross-page flag navigates + stashes the target");
   };
   const ctx = inject(HERE, disk);
   await tick();
-  ctx.doc
-    .getElementById("__cmt_view")
-    .dispatchEvent(new ctx.w.MouseEvent("click", { bubbles: true }));
+  // the island keeps the flag list rendered; the cross-page flag is a card
   const card = ctx.doc.querySelector("#__cmt_panel_list .__cmt_card");
-  assert(!!card, "cross-page flag shows in the panel");
+  assert(!!card, "cross-page flag shows in the list");
   card.dispatchEvent(new ctx.w.MouseEvent("click", { bubbles: true }));
   // The stash is written right before location.assign(), so it proves the
   // navigate path ran. (jsdom won't let us observe the navigation itself.)

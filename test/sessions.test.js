@@ -152,7 +152,7 @@ assert(
 
 console.log("[5] history quick-copy + reopen");
 click(ctx, "#__cmt_history");
-row = ctx.doc.querySelector("#__cmt_hist_list .__cmt_srow");
+row = ctx.doc.querySelector("#__cmt_panel_list .__cmt_srow");
 assert(!!row, "the saved session appears in history");
 row
   .querySelector(".scopy")

@@ -5,8 +5,13 @@ import { flash } from "./utils.js";
 import { buildMarkdownFrom } from "./markdown.js";
 import { copyText } from "./clipboard.js";
 import { addBadge, renumberBadges, repositionBadges } from "./badges.js";
-import { updateCount, renderPanel, openPanel, locateFlag } from "./panel.js";
-import { closeHistory, renderHistory } from "./history.js";
+import {
+  updateCount,
+  renderContent,
+  openPanel,
+  setView,
+  locateFlag,
+} from "./panel.js";
 import { noteResume } from "./follow.js";
 
 const STORE_KEY = "__flagger_store_v1";
@@ -98,7 +103,7 @@ export function persist() {
   sess.status = "open";
   STATE.store.openId = sess.id;
   saveStore();
-  if (STATE.historyOpen) renderHistory();
+  renderContent();
 }
 
 // Copy & Exit: the open session becomes a completed history entry.
@@ -143,7 +148,7 @@ export function newSession() {
   STATE.sessionId = null;
   clearFlagsUI();
   saveStore();
-  if (STATE.historyOpen) renderHistory();
+  setView("flags");
 }
 
 // Reopen a saved session: make it active and re-pin this page's flags.
@@ -164,8 +169,8 @@ export function reopenSession(id) {
   saveStore();
   clearFlagsUI();
   hydrate(target.flags);
-  closeHistory();
-  if (!STATE.panelOpen) openPanel();
+  setView("flags");
+  openPanel();
 }
 
 function dropSession(id) {
@@ -182,7 +187,7 @@ export function deleteSession(id) {
     clearFlagsUI();
   }
   saveStore();
-  if (STATE.historyOpen) renderHistory();
+  renderContent();
 }
 
 function clearFlagsUI() {
@@ -194,7 +199,7 @@ function clearFlagsUI() {
   );
   STATE.flags = [];
   updateCount();
-  if (STATE.panelOpen) renderPanel();
+  renderContent();
 }
 
 // Load a session's flags into STATE; re-pin badges for ones on this page.
@@ -229,7 +234,7 @@ function hydrate(flags) {
   renumberBadges();
   repositionBadges();
   updateCount();
-  if (STATE.panelOpen) renderPanel();
+  renderContent();
 }
 
 export function initSessions() {

@@ -2,7 +2,7 @@
 import { STATE } from "./state.js";
 import { cssSelector, elementSummary, escapeHtml } from "./utils.js";
 import { addBadge } from "./badges.js";
-import { updateCount, renderPanel } from "./panel.js";
+import { updateCount, renderContent } from "./panel.js";
 import { persist } from "./sessions.js";
 
 export function selectElement(el, mouseX, mouseY) {
@@ -67,7 +67,7 @@ export function saveFlag(text, x, y) {
   addBadge(c);
   closePopup();
   updateCount();
-  if (STATE.panelOpen) renderPanel();
+  renderContent();
   persist();
 }
 

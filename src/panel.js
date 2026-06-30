@@ -1,99 +1,102 @@
-// The Flags panel: list of flag cards, editing, locating, and panel layout.
+// The card content inside the island: the flag list, editing, locating, and
+// the expand/collapse + view-switching plumbing (flags ⇄ history).
 import { STATE } from "./state.js";
 import { ICON } from "./icons.js";
 import { DANGER } from "./theme.js";
 import { escapeHtml, hostOf, flash } from "./utils.js";
 import { renumberBadges } from "./badges.js";
-import { persist, navigateToFlag } from "./sessions.js";
-import { closeHistory } from "./history.js";
+import { persist, navigateToFlag, newSession } from "./sessions.js";
+import { renderHistory } from "./history.js";
 import { copyAndExit } from "./overlay.js";
 
-export function togglePanel() {
-  if (STATE.panelOpen) closePanel();
-  else openPanel();
-}
-
+// ----------------------------------------------------- expand / collapse
 export function openPanel() {
-  if (STATE.panel) return;
-  if (STATE.historyOpen) closeHistory();
-  var panel = document.createElement("div");
-  panel.id = "__cmt_panel";
-  panel.className = "__cmt_panel";
-  panel.innerHTML =
-    '<div class="head">' +
-    '  <div class="title">' +
-    "    <h3>Flags</h3>" +
-    '    <span class="count" id="__cmt_panel_count">0</span>' +
-    "  </div>" +
-    '  <button class="x" id="__cmt_panel_close" title="Close">' +
-    ICON.close +
-    "</button>" +
-    "</div>" +
-    '<div class="list" id="__cmt_panel_list"></div>' +
-    '<div class="foot">' +
-    '  <button class="copy" id="__cmt_panel_copy">' +
-    ICON.copy +
-    " Copy &amp; Exit</button>" +
-    "</div>";
-  document.body.appendChild(panel);
-  STATE.panel = panel;
-  STATE.panelOpen = true;
-
-  document
-    .getElementById("__cmt_panel_close")
-    .addEventListener("click", closePanel);
-  document
-    .getElementById("__cmt_panel_copy")
-    .addEventListener("click", copyAndExit);
-  renderPanel();
-  positionPanel();
+  if (!STATE.island) return;
+  STATE.island.classList.add("__cmt_open", "__cmt_hot");
+  STATE.hot = true;
+  STATE.open = true;
+  sizeIsland();
 }
 
 export function closePanel() {
-  if (STATE.panel) STATE.panel.remove();
-  STATE.panel = null;
-  STATE.panelOpen = false;
-}
-
-export function positionBox(box) {
-  if (!box) return;
-  var t = STATE.toolbar.getBoundingClientRect();
-  var panelW = 380;
-  var gap = 12;
-  var margin = 16;
-  var minH = 240;
-
-  var spaceBelow = window.innerHeight - t.bottom - gap - margin;
-  var spaceAbove = t.top - gap - margin;
-  var dropDown = spaceBelow >= minH || spaceBelow >= spaceAbove;
-
-  var maxH = Math.max(minH, dropDown ? spaceBelow : spaceAbove);
-  if (dropDown) {
-    box.style.top = t.bottom + gap + "px";
-    box.style.bottom = "auto";
-  } else {
-    box.style.top = "auto";
-    box.style.bottom = window.innerHeight - t.top + gap + "px";
+  if (STATE.island) {
+    STATE.island.classList.remove("__cmt_open");
+    STATE.island.style.height = ""; // back to the collapsed pill height
   }
-  box.style.maxHeight = maxH + "px";
-
-  var leftPos = t.right - panelW;
-  if (leftPos < margin)
-    leftPos = Math.min(t.left, window.innerWidth - panelW - margin);
-  if (leftPos < margin) leftPos = margin;
-  box.style.left = leftPos + "px";
-  box.style.right = "auto";
+  STATE.open = false;
+  STATE.pinned = false;
+  // a collapsed card always reopens to the flags view
+  if (STATE.view === "history") {
+    STATE.view = "flags";
+    STATE.historyOpen = false;
+    renderContent();
+  }
 }
 
-export function positionPanel() {
-  if (STATE.panel) positionBox(STATE.panel);
+// Grow the card to exactly fit its content (header + list + footer), capped so
+// long lists scroll instead. Measured off-screen at the open width so it's
+// accurate even mid-morph.
+export function sizeIsland() {
+  if (!STATE.island || !STATE.open) return;
+  var list = document.getElementById("__cmt_panel_list");
+  if (!list) return;
+  var clone = list.cloneNode(true);
+  clone.removeAttribute("id");
+  clone.style.cssText =
+    "position:absolute;left:-9999px;right:auto;top:0;bottom:auto;visibility:hidden;width:338px;height:auto;overflow:visible;";
+  document.body.appendChild(clone);
+  var listH = clone.offsetHeight;
+  clone.remove();
+  var h = 48 + Math.max(180, Math.min(listH, 420)) + 46;
+  STATE.island.style.height = h + "px";
 }
 
-export function repositionOpenBoxes() {
-  if (STATE.panelOpen) positionBox(STATE.panel);
-  if (STATE.historyOpen) positionBox(STATE.history);
+// ----------------------------------------------------- view switching
+export function setView(v) {
+  STATE.view = v;
+  STATE.historyOpen = v === "history";
+  renderContent();
 }
 
+// Render whichever view is active into the shared list + footer.
+export function renderContent() {
+  var title = document.getElementById("__cmt_hd_title");
+  if (STATE.view === "history") {
+    if (title) title.textContent = "History";
+    renderHistory();
+    renderFooter("history");
+  } else {
+    if (title) title.textContent = "Flags";
+    renderPanel();
+    renderFooter("flags");
+  }
+}
+
+function renderFooter(mode) {
+  var f = document.getElementById("__cmt_footL");
+  if (!f) return;
+  if (mode === "history") {
+    f.innerHTML =
+      '<button class="newbtn" id="__cmt_hist_new">' +
+      ICON.plus +
+      " New session</button>";
+    document
+      .getElementById("__cmt_hist_new")
+      .addEventListener("click", function () {
+        newSession();
+      });
+  } else {
+    f.innerHTML =
+      '<button class="copy" id="__cmt_copy">' +
+      ICON.copy +
+      " Copy &amp; exit</button>";
+    document
+      .getElementById("__cmt_copy")
+      .addEventListener("click", copyAndExit);
+  }
+}
+
+// ----------------------------------------------------- flag list
 export function renderPanel() {
   var list = document.getElementById("__cmt_panel_list");
   if (!list) return;
@@ -101,7 +104,8 @@ export function renderPanel() {
   if (headCount) headCount.textContent = STATE.flags.length;
   if (!STATE.flags.length) {
     list.innerHTML =
-      '<div class="empty"><strong>No flags yet</strong>Click any element to flag it.</div>';
+      '<div class="empty"><strong>No flags yet</strong>Click any element on the page to flag it.</div>';
+    if (STATE.open) sizeIsland();
     return;
   }
   list.innerHTML = "";
@@ -149,6 +153,7 @@ export function renderPanel() {
     });
     list.appendChild(card);
   });
+  if (STATE.open) sizeIsland();
 }
 
 export function startEdit(card, c) {
@@ -161,6 +166,7 @@ export function startEdit(card, c) {
   body.appendChild(ta);
   ta.focus();
   ta.setSelectionRange(ta.value.length, ta.value.length);
+  if (STATE.open) sizeIsland();
 
   var actions = card.querySelector(".actions");
   actions.innerHTML =
@@ -225,27 +231,28 @@ export function locateFlag(c) {
   }, 600);
 }
 
+// Open the card from an on-page badge and highlight that flag's row.
 export function showFlag(c) {
-  if (!STATE.panelOpen) openPanel();
+  if (STATE.view !== "flags") setView("flags");
+  openPanel();
+  STATE.pinned = true; // stays open until you click away
   setTimeout(function () {
-    if (!STATE.panel) return;
-    var card = STATE.panel.querySelector('.__cmt_card[data-id="' + c.id + '"]');
+    var list = document.getElementById("__cmt_panel_list");
+    if (!list) return;
+    var card = list.querySelector('.__cmt_card[data-id="' + c.id + '"]');
     if (!card) return;
-    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.scrollIntoView({ block: "center" });
     card.classList.add("__cmt_highlight");
     setTimeout(function () {
       card.classList.remove("__cmt_highlight");
     }, 1500);
-  }, 30);
+  }, 60);
 }
 
 export function updateCount() {
   var n = STATE.flags.length;
   var el = document.getElementById("__cmt_count_label");
-  if (el) {
-    el.textContent = n;
-    el.classList.toggle("empty", n === 0);
-  }
+  if (el) el.textContent = n;
   var pc = document.getElementById("__cmt_panel_count");
   if (pc) pc.textContent = n;
 }

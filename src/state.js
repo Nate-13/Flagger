@@ -23,8 +23,14 @@ export const STATE = {
   _offered: false, // the follow modal has been shown this load
   store: null, // loaded { sessions: [...], openId } from chrome.storage
   sessionId: null, // id of the current open session (null until first flag)
-  history: null, // history panel element
+  history: null, // (legacy) history panel element — unused in the island UI
   historyOpen: false,
-  toolbar: null, // toolbar element
+  view: "flags", // which view the island card shows: "flags" | "history"
+  island: null, // the morphing island element (the whole control)
+  toolbar: null, // alias of island, kept for older references
+  open: false, // the card is expanded (s2)
+  hot: false, // pointer is over the island (corner reveals Pause)
+  pinned: false, // card was opened programmatically; stays open until dismissed
+  commentOpen: null, // id of the on-page flag whose comment bubble is expanded
   style: null, // injected <style> element
 };

@@ -1,5 +1,4 @@
 // Small DOM-agnostic helpers used across the overlay.
-import { BLACK } from "./theme.js";
 
 export function cssSelector(el) {
   if (!(el instanceof Element)) return "";
@@ -107,18 +106,14 @@ export function relTime(ts) {
   }
 }
 
-// Transient toast in the top-right. `color` (optional) tints it for errors.
-export function flash(msg, color) {
+// Transient toast near the control. A truthy second arg flags it as an error.
+export function flash(msg, isError) {
   var existing = document.getElementById("__cmt_flash");
   if (existing) existing.remove();
   var el = document.createElement("div");
   el.id = "__cmt_flash";
+  if (isError) el.className = "__cmt_err";
   el.textContent = msg;
-  if (color) {
-    el.style.background = color;
-    el.style.color = "white";
-    el.style.borderColor = BLACK;
-  }
   document.body.appendChild(el);
   setTimeout(function () {
     if (el.parentNode) el.remove();
