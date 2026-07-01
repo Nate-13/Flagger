@@ -32,5 +32,6 @@ export const STATE = {
   hot: false, // pointer is over the island (corner reveals Pause)
   pinned: false, // card was opened programmatically; stays open until dismissed
   commentOpen: null, // id of the on-page flag whose comment bubble is expanded
+  closeArmed: false, // Esc armed the quick-close (✕) affordance on the pill
   style: null, // injected <style> element
 };

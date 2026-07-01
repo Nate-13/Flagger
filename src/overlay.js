@@ -21,6 +21,7 @@ import { initFollow, teardownFollow } from "./follow.js";
 
 var dwellTimer = null;
 var leaveTimer = null;
+var armTimer = null;
 var dragStartX = 0,
   dragStartY = 0,
   dragRight = 0,
@@ -90,6 +91,10 @@ function onResize() {
 // ---------------------------------------------------- hover ⇄ expand
 function onIslandEnter() {
   clearTimeout(leaveTimer);
+  if (STATE.closeArmed) {
+    clearTimeout(armTimer); // hovering keeps the close affordance up; don't expand
+    return;
+  }
   STATE.hot = true;
   STATE.island.classList.add("__cmt_hot");
   dwellTimer = setTimeout(openPanel, 300); // linger to grow the card
@@ -97,12 +102,38 @@ function onIslandEnter() {
 function onIslandLeave() {
   if (STATE.dragging) return; // stay open while being dragged
   clearTimeout(dwellTimer);
+  if (STATE.closeArmed) {
+    clearTimeout(armTimer); // re-start the disarm countdown once you leave it
+    armTimer = setTimeout(disarmClose, 2000);
+    return;
+  }
   if (STATE.pinned) return; // pinned cards wait for a click-away
   leaveTimer = setTimeout(function () {
     STATE.hot = false;
     STATE.island.classList.remove("__cmt_hot");
     closePanel();
   }, 240);
+}
+
+// ---------------------------------------------------- quick close (Esc)
+// Esc arms this: the pill extends left to reveal a ✕. Esc again (or clicking it)
+// closes; otherwise it disarms and collapses back on its own.
+function armClose() {
+  if (STATE.open) {
+    closePanel();
+    STATE.island.classList.remove("__cmt_hot");
+    STATE.hot = false;
+  }
+  clearTimeout(dwellTimer);
+  STATE.closeArmed = true;
+  STATE.island.classList.add("__cmt_armed");
+  clearTimeout(armTimer);
+  armTimer = setTimeout(disarmClose, 3500);
+}
+function disarmClose() {
+  clearTimeout(armTimer);
+  STATE.closeArmed = false;
+  if (STATE.island) STATE.island.classList.remove("__cmt_armed");
 }
 
 // ---------------------------------------------------- drag to reposition
@@ -167,21 +198,31 @@ function setPaused(paused) {
 function onPauseClick(e) {
   e.stopPropagation();
   clearTimeout(dwellTimer); // don't let it expand right after a pause click
+  disarmClose();
   togglePause();
 }
+function isTyping() {
+  var el = document.activeElement;
+  return !!(
+    el &&
+    (el.isContentEditable || /^(input|textarea|select)$/i.test(el.tagName))
+  );
+}
 function onKeyDown(e) {
-  if (e.key === "Escape" && STATE.commentOpen != null) {
-    closeComment();
+  if (e.key === "Escape") {
+    if (STATE.commentOpen != null) {
+      closeComment();
+      return;
+    }
+    if (STATE.popup || isTyping()) return; // let the note editor / page fields keep Esc
+    e.preventDefault();
+    if (STATE.closeArmed) confirmCancel();
+    else armClose();
     return;
   }
   // Alt+Shift+P toggles browse/flag. Ignore while typing in a field.
   if (!(e.altKey && e.shiftKey) || e.code !== "KeyP") return;
-  var ae = document.activeElement;
-  if (
-    ae &&
-    (ae.isContentEditable || /^(input|textarea|select)$/i.test(ae.tagName))
-  )
-    return;
+  if (isTyping()) return;
   e.preventDefault();
   togglePause();
 }
@@ -238,6 +279,7 @@ export function cleanup() {
   window.removeEventListener("resize", onResize);
   clearTimeout(dwellTimer);
   clearTimeout(leaveTimer);
+  clearTimeout(armTimer);
   document.removeEventListener("mousemove", onDragMove, true);
   document.removeEventListener("mouseup", onDragEnd, true);
   teardownFollow();
@@ -293,7 +335,10 @@ export function mount() {
     '  <span class="__cmt_lyr browse">' +
     ICON.play +
     '<span class="n">Resume</span></span>' +
-    "</button>";
+    "</button>" +
+    '<button id="__cmt_quickclose" title="Close Flagger">' +
+    ICON.close +
+    '<span class="k">Esc</span></button>';
   document.body.appendChild(island);
   STATE.island = island;
   STATE.toolbar = island; // alias for older references
@@ -307,6 +352,9 @@ export function mount() {
   document
     .getElementById("__cmt_pause")
     .addEventListener("click", onPauseClick);
+  document
+    .getElementById("__cmt_quickclose")
+    .addEventListener("click", confirmCancel);
 
   island.addEventListener("mouseenter", onIslandEnter);
   island.addEventListener("mouseleave", onIslandLeave);

@@ -119,7 +119,8 @@ export function injectStyles() {
     // footer's second button. Transparent itself; its layers fill the pill when
     // compact and morph into an inset button (matching Copy) when the card opens.
     "#__cmt_pause { position: absolute; right: 0; bottom: 0; z-index: 2;",
-    "  width: 116px; height: 46px; border: 0; padding: 0; cursor: pointer; background: transparent; }",
+    "  width: 116px; height: 46px; border: 0; padding: 0; cursor: pointer; background: transparent;",
+    "  transition: width 0.3s var(--cmt-ease); }",
     "#__cmt_pause .__cmt_lyr { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;",
     "  gap: 7px; box-sizing: border-box; border: 1px solid transparent; border-radius: 0; opacity: 0;",
     "  transition: opacity 0.16s ease, top 0.32s var(--cmt-ease), bottom 0.32s var(--cmt-ease),",
@@ -147,6 +148,20 @@ export function injectStyles() {
     "  border-radius: 8px; background: rgba(242,184,36,0.13); border-color: rgba(242,184,36,0.5); color: var(--cmt-accent); }",
     "#__cmt_island.__cmt_open.__cmt_paused #__cmt_pause:hover .browse { background: rgba(242,184,36,0.22); }",
     "#__cmt_island.__cmt_open.__cmt_paused #__cmt_pause .browse svg { color: var(--cmt-accent); }",
+
+    // -------- quick close: Esc extends the pill left to reveal a red button
+    // with the ✕ and an inline 'Esc' label to its right.
+    "#__cmt_quickclose { position: absolute; left: 8px; bottom: 7px; z-index: 3; width: 62px; height: 32px; padding: 0;",
+    "  border-radius: 8px; cursor: pointer; background: var(--cmt-danger); color: #fff; border: 1px solid #cf4a45;",
+    "  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.3);",
+    "  display: flex; align-items: center; justify-content: center; gap: 6px; opacity: 0; pointer-events: none;",
+    "  transition: opacity 0.16s ease, background 0.14s ease; }",
+    "#__cmt_quickclose svg { width: 15px; height: 15px; }",
+    "#__cmt_quickclose .k { font-size: 11px !important; font-weight: 600 !important; color: rgba(255,255,255,0.92); }",
+    "#__cmt_quickclose:hover { background: #d3443f; }",
+    "#__cmt_island.__cmt_armed:not(.__cmt_open) { width: 134px; }",
+    "#__cmt_island.__cmt_armed:not(.__cmt_open) #__cmt_pause { width: 56px; }",
+    "#__cmt_island.__cmt_armed:not(.__cmt_open) #__cmt_quickclose { opacity: 1; pointer-events: auto; }",
 
     // ============================================================
     // FLAG CARDS (inside the list)
