@@ -138,8 +138,10 @@ export function injectStyles() {
     "#__cmt_island.__cmt_hot:not(.__cmt_paused) #__cmt_pause .pause,",
     "#__cmt_island.__cmt_open:not(.__cmt_paused) #__cmt_pause .pause { opacity: 1; }",
     "#__cmt_island.__cmt_paused #__cmt_pause .browse { opacity: 1; }",
-    // compact + paused: the whole pill goes gold (the browsing indicator)
-    "#__cmt_island.__cmt_paused:not(.__cmt_open) #__cmt_pause .browse { background: var(--cmt-pause); }",
+    // compact + paused: Resume is a solid gold inset button, not a filled slab
+    "#__cmt_island.__cmt_paused:not(.__cmt_open) #__cmt_pause .browse { top: 7px; bottom: 7px; left: 7px; right: 7px;",
+    "  border-radius: 8px; background: linear-gradient(180deg, #f6c63e, #efb31d); border: 1px solid var(--cmt-accent-edge);",
+    "  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42), 0 1px 2px rgba(0,0,0,0.3); }",
     // open: Pause / Resume become inset buttons that match Copy — never a cell
     "#__cmt_island.__cmt_open #__cmt_pause .pause { top: 7px; bottom: 7px; left: 6px; right: 8px;",
     "  border-radius: 8px; background: rgba(255,255,255,0.04); border-color: var(--cmt-line-2); }",
@@ -162,6 +164,10 @@ export function injectStyles() {
     "#__cmt_island.__cmt_armed:not(.__cmt_open) { width: 134px; }",
     "#__cmt_island.__cmt_armed:not(.__cmt_open) #__cmt_pause { width: 56px; }",
     "#__cmt_island.__cmt_armed:not(.__cmt_open) #__cmt_quickclose { opacity: 1; pointer-events: auto; }",
+    // paused + armed: extend the parent so Resume keeps its natural size (not
+    // compressed) and both buttons get even padding
+    "#__cmt_island.__cmt_armed.__cmt_paused:not(.__cmt_open) { width: 180px; }",
+    "#__cmt_island.__cmt_armed.__cmt_paused:not(.__cmt_open) #__cmt_pause { width: 110px; }",
 
     // ============================================================
     // FLAG CARDS (inside the list)
