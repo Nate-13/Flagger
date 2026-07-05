@@ -9,12 +9,20 @@ ready to paste into your agent of choice.
 
 ## What it captures
 
-For each flag, Flagger records:
+The brief is built to help the agent _find the right code_, so each flag
+records as much identifying context as the element actually carries — and
+nothing it doesn't (empty fields are dropped, so a plain flag stays short):
 
 - **URL** of the page
 - **CSS selector** for the element (auto-generated, ID-aware)
-- **Element summary** (tag + a short description)
-- **Position** on the page
+- **Element summary** (tag + a short description) and rendered **size**
+- **Identifying attributes** — `data-testid`, `aria-label`, `href`, `role`,
+  … (never the noisy class list)
+- **Component + source file** — the React/Vue component name and, on dev
+  builds, its source path (see below)
+- **Key styles** — the handful that matter for sizing/color asks, defaults
+  omitted
+- A bundler **source hint** (e.g. Sentry's `data-sentry-source-file`)
 - **Your note** ("Why flag this?")
 
 These are assembled into a Markdown document like:
@@ -23,12 +31,24 @@ These are assembled into a Markdown document like:
 ## Flag 1
 
 - URL: https://example.com
-- Selector: `header > nav > a.cta`
-- Element: `<a class="cta">Sign up</a>`
-- Position: 1240, 32
+- Selector: `header nav a[data-testid="signup"]`
+- Element: `<a>Sign up</a>` · 96×36px
+- Component: `<SignupButton>` — src/nav/SignupButton.tsx:14
+- Attributes: data-testid="signup", href="/signup"
+- Styles: font-size 14px · weight 600 · bg #111 · padding 8px 16px
 
 > Make this button bigger and move it left of the logo.
 ```
+
+### Component detection
+
+Flagger can name the **React/Vue component** behind a flagged element, and on
+dev builds add its **source file and line**. Because the overlay runs in the
+extension's isolated world (where it can't see the fibers frameworks attach to
+DOM nodes), it injects a tiny probe into the page's main world and asks it,
+per flag, over `postMessage`. It's best-effort: strict-CSP pages may block the
+probe, and production builds usually minify names and strip source paths — in
+those cases the field is simply omitted.
 
 ## Project structure
 
@@ -37,25 +57,25 @@ The overlay is written as small ES modules in `src/` and bundled by
 injects. The build also copies the static files so `dist/` is a complete,
 loadable unpacked extension.
 
-| Path                 | Purpose                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `manifest.json`      | Extension manifest (Manifest V3).                                                           |
-| `background.js`      | Service worker; injects on toolbar click and re-injects after navigation when Follow is on. |
-| `enable-follow.html` | The Follow modal — an extension page embedded in-page as an iframe.                         |
-| `enable-follow.js`   | Logic for that modal (requests `<all_urls>` on the Allow click).                            |
-| `src/`               | Overlay source modules (see below); `src/index.js` is the entry point.                      |
-| `build.js`           | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files.                 |
-| `dist/`              | Build output and the folder you load into Chrome (generated; git-ignored).                  |
-| `test/`              | jsdom integration tests (sessions, pass-through, follow, navigation, comments).             |
-| `icon-*.png`         | Toolbar / store icons (16, 48, 128 px).                                                     |
+| Path                 | Purpose                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `manifest.json`      | Extension manifest (Manifest V3).                                                              |
+| `background.js`      | Service worker; injects on toolbar click and re-injects after navigation when Follow is on.    |
+| `enable-follow.html` | The Follow modal — an extension page embedded in-page as an iframe.                            |
+| `enable-follow.js`   | Logic for that modal (requests `<all_urls>` on the Allow click).                               |
+| `src/`               | Overlay source modules (see below); `src/index.js` is the entry point.                         |
+| `build.js`           | esbuild bundler — `src/index.js` → `dist/content.js` + copies static files.                    |
+| `dist/`              | Build output and the folder you load into Chrome (generated; git-ignored).                     |
+| `test/`              | jsdom integration tests (sessions, pass-through, follow, navigation, comments, close, detect). |
+| `icon-*.png`         | Toolbar / store icons (16, 48, 128 px).                                                        |
 
 The `src/` modules: `index` (entry/guard) → `overlay` (the morphing "island"
 control, page events, pause, drag, copy/exit, teardown) which pulls in `flags`
 (selection + popup), `panel` (the island's flag list, expand/collapse, and the
 flags⇄history views), `history` (saved sessions), `sessions` (persistence),
 `badges` (on-page pins that expand into comments), `follow` (follow-across-pages),
-`markdown`, `clipboard`, `styles`, `icons`, `theme`, `utils`, and the shared
-`state` object.
+`detect` (main-world probe for framework component names), `markdown`,
+`clipboard`, `styles`, `icons`, `theme`, `utils`, and the shared `state` object.
 
 ## Installing locally (unpacked)
 

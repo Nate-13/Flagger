@@ -12,6 +12,7 @@ import {
 import { addBadge } from "./badges.js";
 import { updateCount, renderContent } from "./panel.js";
 import { persist } from "./sessions.js";
+import { probeComponent } from "./detect.js";
 
 export function selectElement(el, mouseX, mouseY) {
   if (STATE.hoverEl) STATE.hoverEl.classList.remove("__cmt_outline");
@@ -81,6 +82,7 @@ export function saveFlag(text, x, y) {
   updateCount();
   renderContent();
   persist();
+  probeComponent(c); // async: fills c.component + re-persists if a framework is found
 }
 
 export function cancelFlag() {

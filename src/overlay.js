@@ -18,6 +18,7 @@ import { toggleHistory } from "./history.js";
 import { selectElement, closePopup } from "./flags.js";
 import { finishSession, hasStorage, initSessions } from "./sessions.js";
 import { initFollow, teardownFollow } from "./follow.js";
+import { installProbe, teardownProbe } from "./detect.js";
 
 var dwellTimer = null;
 var leaveTimer = null;
@@ -283,6 +284,7 @@ export function cleanup() {
   document.removeEventListener("mousemove", onDragMove, true);
   document.removeEventListener("mouseup", onDragEnd, true);
   teardownFollow();
+  teardownProbe();
   Array.prototype.forEach.call(
     document.querySelectorAll(".__cmt_outline, .__cmt_selected"),
     function (el) {
@@ -306,6 +308,7 @@ export function cleanup() {
 export function mount() {
   document.documentElement.classList.add("__cmt_root");
   injectStyles();
+  installProbe();
 
   var island = document.createElement("div");
   island.id = "__cmt_island";
