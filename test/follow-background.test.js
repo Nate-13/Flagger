@@ -81,6 +81,16 @@ assert(
   C.exec.some((c) => c.target.tabId === 7 && c.files.includes("content.js")),
   "onClicked injects content.js",
 );
+await tick(); // let the fire-and-forget main-world probe injection settle
+assert(
+  C.exec.some(
+    (c) =>
+      c.target.tabId === 7 &&
+      c.world === "MAIN" &&
+      c.files.includes("probe.js"),
+  ),
+  "onClicked also injects the main-world probe",
+);
 
 const HTTP = { url: "https://example.com" };
 

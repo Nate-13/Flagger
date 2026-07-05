@@ -56,6 +56,23 @@ async function injectOverlay(tabId) {
   } catch (e) {
     /* restricted page / closed tab / race — ignore */
   }
+  injectProbe(tabId);
+}
+
+// The component probe runs in the page's MAIN world so it can read React/Vue
+// fibers. Injecting it here (rather than as an inline <script> from the content
+// script) means it isn't subject to the page's CSP. Best-effort and harmless if
+// it fails — component detection just stays off.
+async function injectProbe(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      world: "MAIN",
+      files: ["probe.js"],
+    });
+  } catch (e) {
+    /* CSP can't block this, but old Chrome / closed tab / race — ignore */
+  }
 }
 
 // Toolbar click: inject into the active tab (activeTab gesture). Skip pages we

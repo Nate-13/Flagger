@@ -23,11 +23,12 @@ function copyStatics() {
 }
 
 const options = {
-  entryPoints: ["src/index.js"],
+  // content.js is the isolated-world overlay; probe.js is the main-world
+  // component probe the background injects with world:"MAIN".
+  entryPoints: { content: "src/index.js", probe: "src/probe.js" },
   bundle: true,
-  outfile: join(OUT, "content.js"),
-  // The overlay is injected as a classic content script (not an ES module),
-  // so emit a self-contained IIFE.
+  outdir: OUT,
+  // Injected as classic scripts (not ES modules), so emit self-contained IIFEs.
   format: "iife",
   target: ["chrome110"],
   legalComments: "none",
@@ -40,5 +41,5 @@ if (watch) {
   console.log("flagger: watching src/ … (Ctrl+C to stop)");
 } else {
   await esbuild.build(options);
-  console.log("flagger: built " + join(OUT, "content.js"));
+  console.log("flagger: built " + join(OUT, "content.js") + " + probe.js");
 }
