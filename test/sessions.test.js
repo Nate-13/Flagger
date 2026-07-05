@@ -32,7 +32,7 @@ function makeChrome() {
 }
 
 const PAGE = `<!DOCTYPE html><html><body>
-  <header><nav><a id="target" class="cta">Sign up</a></nav></header>
+  <header><nav><a id="target" class="cta" href="/signup" data-testid="signup">Sign up</a></nav></header>
   <p id="other">hello</p>
 </body></html>`;
 
@@ -103,6 +103,11 @@ assert(store.sessions[0].flags.length === 1, "session has 1 flag");
 assert(store.sessions[0].flags[0].selector === "#target", "selector captured");
 assert(store.sessions[0].flags[0].text === "make this bigger", "note captured");
 assert(store.sessions[0].flags[0].url === URL1, "url captured");
+assert(
+  /data-testid="signup"/.test(store.sessions[0].flags[0].attrs || "") &&
+    /href="\/signup"/.test(store.sessions[0].flags[0].attrs || ""),
+  "identifying attributes captured (not the class list)",
+);
 assert(ctx.doc.querySelectorAll(".__cmt_badge").length === 1, "badge pinned");
 
 console.log("[2] multi-page accumulation + resume");
@@ -134,6 +139,10 @@ assert(
   "session marked done+copied",
 );
 assert(ctx.clipboardWrites.length === 1, "markdown copied to clipboard");
+assert(
+  /Attributes:.*data-testid="signup"/.test(ctx.clipboardWrites[0]),
+  "brief surfaces the captured attributes",
+);
 assert(
   /## Flag 1[\s\S]*## Flag 2/.test(ctx.clipboardWrites[0]),
   "markdown has both flags",

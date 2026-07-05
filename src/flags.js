@@ -1,6 +1,14 @@
 // Element selection + the "Why flag this?" popup that creates a flag.
 import { STATE } from "./state.js";
-import { cssSelector, elementSummary, escapeHtml } from "./utils.js";
+import {
+  cssSelector,
+  elementSummary,
+  escapeHtml,
+  keyAttributes,
+  curatedStyles,
+  elementSize,
+  sourceHint,
+} from "./utils.js";
 import { addBadge } from "./badges.js";
 import { updateCount, renderContent } from "./panel.js";
 import { persist } from "./sessions.js";
@@ -60,6 +68,10 @@ export function saveFlag(text, x, y) {
     summary: elementSummary(el),
     x: Math.round(x),
     y: Math.round(y),
+    attrs: keyAttributes(el),
+    styles: curatedStyles(el),
+    size: elementSize(el),
+    source: sourceHint(el),
     text: t,
     badge: null,
   };

@@ -75,6 +75,11 @@ function serializeFlags() {
       summary: c.summary,
       x: c.x,
       y: c.y,
+      attrs: c.attrs,
+      styles: c.styles,
+      size: c.size,
+      source: c.source,
+      component: c.component,
       text: c.text,
     };
   });
@@ -213,6 +218,11 @@ function hydrate(flags) {
       summary: f.summary,
       x: f.x,
       y: f.y,
+      attrs: f.attrs,
+      styles: f.styles,
+      size: f.size,
+      source: f.source,
+      component: f.component,
       text: f.text,
       badge: null,
     };
